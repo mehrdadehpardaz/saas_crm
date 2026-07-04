@@ -1,0 +1,31 @@
+/* assets/css/reset.css */
+/* فونت Vazirmatn دیگر اینجا @import نمی‌شود — برای جلوگیری از
+   render-blocking، از <link rel="stylesheet"> در <head> با
+   preconnect بارگذاری می‌شود (نگاه کنید به index.php) */
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+ul {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+}

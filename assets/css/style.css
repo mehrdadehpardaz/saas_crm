@@ -1,0 +1,123 @@
+/* assets/css/style.css */
+/* فونت Vazirmatn از HTML <head> لود می‌شود، نه اینجا (رجوع کنید به reset.css) */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Vazirmatn', sans-serif;
+    background: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    width: 100%;
+    padding: 16px;
+    margin: 0 auto;
+    max-width: 480px; /* mobile first */
+}
+
+/* هدر و منوی پایین */
+header {
+    background: #1a73e8;
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+/* فرم‌ها */
+input, select, textarea, button {
+    font-family: inherit;
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+button {
+    background: #1a73e8;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #1557b0;
+}
+
+/* کارت‌ها */
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Autocomplete wrapper */
+.autocomplete-wrapper {
+    position: relative;
+}
+.autocomplete-suggestions {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 50;
+    display: none;
+}
+.autocomplete-suggestions.active {
+    display: block;
+}
+.autocomplete-suggestions div {
+    padding: 10px;
+    cursor: pointer;
+}
+.autocomplete-suggestions div:hover {
+    background: #e8f0fe;
+}
+.autocomplete-suggestions .add-new {
+    color: #1a73e8;
+    font-weight: bold;
+}
+
+/* alert */
+.alert {
+    padding: 12px;
+    border-radius: 8px;
+    margin: 12px 0;
+}
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+/* responsive */
+@media (min-width: 768px) {
+    .container {
+        max-width: 720px;
+    }
+}
+@media (min-width: 1024px) {
+    .container {
+        max-width: 960px;
+    }
+}

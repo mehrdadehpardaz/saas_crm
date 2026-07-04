@@ -1,0 +1,10 @@
+# Controllers/.htaccess  (همین فایل را عیناً در models/.htaccess و includes/.htaccess هم بگذارید)
+# این پوشه فقط باید توسط index.php (با include) صدا زده شود، نه مستقیم از مرورگر.
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>

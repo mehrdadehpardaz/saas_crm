@@ -1,0 +1,44 @@
+/* assets/css/layout.css */
+.container {
+    width: 100%;
+    padding: 16px;
+    margin: 0 auto;
+    max-width: 480px;
+}
+
+header {
+    background: var(--primary);
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+header h1 {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-light);
+    font-size: 12px;
+}
+
+@media (min-width: 768px) {
+    .container {
+        max-width: 720px;
+        padding: 24px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .container {
+        max-width: 960px;
+    }
+}

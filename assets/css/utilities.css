@@ -1,0 +1,22 @@
+/* assets/css/utilities.css */
+
+.text-light { color: var(--text-light); font-size: 12px; }
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.text-center { text-align: center; }
+
+/* فقط برای screen reader — برای لیبل‌هایی که بصری نیستند ولی برای
+   دسترس‌پذیری فرم‌ها لازم‌اند (مثلاً لیبل یک input بدون متن قابل دیدن) */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

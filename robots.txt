@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /index.php
+Disallow: /Controllers/
+Disallow: /models/
+Disallow: /includes/
+Disallow: /config/
+Disallow: /api/
+Allow: /landing.php
+Allow: /assets/
+
+Sitemap: https://paygiro.ir/sitemap.xml

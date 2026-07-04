@@ -1,0 +1,244 @@
+/* assets/css/auth.css — هماهنگ با تم پیگیر، با توکن‌های سراسری variables.css */
+.auth-container {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    background: var(--paper);
+    background-image:
+        radial-gradient(circle at 15% 15%, rgba(255,107,53,.06), transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(22,160,133,.06), transparent 40%);
+}
+
+@media (min-width: 1024px) {
+    .auth-container { padding: 40px; }
+}
+
+.auth-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 32px 28px;
+    box-shadow: var(--shadow-lg);
+    /* عرض با یک قانون مشترک و بدون هیچ شرطی بر مبنای حالت ورود/ثبت‌نام
+       پین می‌شود — min-width و max-width برابر، تا عرض همیشه دقیقاً
+       همین مقدار باشد، صرف‌نظر از این‌که محتوای داخل کدام صفحه بیشتر است. */
+    width: 100%;
+    min-width: 0;
+    max-width: 420px;
+    animation: authCardIn .35s cubic-bezier(.2,.8,.2,1);
+}
+
+@media (min-width: 480px) {
+    .auth-card { min-width: 420px; }
+}
+
+@media (min-width: 1024px) {
+    .auth-card { max-width: 440px; padding: 38px 36px; }
+}
+
+@keyframes authCardIn {
+    from { opacity: 0; transform: translateY(14px) scale(.98); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* لینک بازگشت */
+.auth-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    margin-bottom: 18px;
+}
+.auth-back-link:hover { color: var(--ink); }
+
+/* لوگو و تگ‌لاین */
+.auth-top { text-align: center; margin-bottom: 18px; }
+.auth-card .logo {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 12px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, var(--ember), var(--ember-deep));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 900;
+    font-size: 24px;
+    font-style: normal;
+    box-shadow: 0 6px 18px rgba(255,107,53,.32);
+}
+.auth-tagline { color: var(--ink-soft); font-size: 13px; }
+
+/* سوییچ حالت (ورود/ثبت‌نام) — تب ساده با خط زیر فعال
+   عمداً pill با پس‌زمینه استفاده نشده: با grid دو ستون مساوی، عرض دو
+   دکمه همیشه دقیقاً برابر است (برخلاف flex که به طول متن داخلی حساس
+   می‌شود) و چون فونت/رنگ/پدینگ هر دو یکسان است، هیچ‌کدام بزرگ‌تر یا
+   برجسته‌تر از دیگری به‌نظر نمی‌رسد — فقط خط رنگی زیر گزینه فعال است. */
+.auth-mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1.5px solid var(--line);
+    margin-bottom: 22px;
+}
+.auth-mode-btn {
+    min-width: 0;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -1.5px;
+    transition: color .15s, border-color .15s;
+}
+.auth-mode-btn.active {
+    color: var(--ember-deep);
+    border-bottom-color: var(--ember);
+}
+.auth-mode-btn:not(.active):hover { color: var(--ink); }
+
+.auth-card h2 {
+    text-align: center;
+    margin-bottom: 22px;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -.01em;
+}
+
+/* فرم */
+.auth-card .form-group { margin-bottom: 15px; }
+
+.auth-card .form-group label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 6px;
+}
+
+.auth-card .form-group input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--paper);
+    color: var(--ink);
+    transition: border-color .15s, background .15s;
+}
+
+.auth-card .form-group input:focus {
+    outline: none;
+    border-color: var(--ember);
+    background: #fff;
+}
+
+.form-hint {
+    display: block;
+    margin-top: 5px;
+    font-size: 11px;
+    color: #8A8478;
+}
+
+/* فیلد رمز عبور با دکمه نمایش/پنهان */
+.password-field { position: relative; }
+.password-field input { padding-left: 64px; }
+.password-toggle {
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 6px 8px;
+}
+.password-toggle:hover { color: var(--ember-deep); }
+.password-toggle:focus-visible { outline: 2px solid var(--ember); outline-offset: 1px; border-radius: 6px; }
+
+/* دکمه باز کردن فیلد اختیاری شرکت — هماهنگ با الگوی فرم مشتری */
+.auth-more-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 8px 0;
+    margin-bottom: 6px;
+    width: 100%;
+    text-align: right;
+}
+.auth-more-toggle:hover { color: var(--ember-deep); }
+.auth-more-toggle .arrow { font-size: 11px; transition: transform .2s; }
+.auth-more-toggle.open .arrow { transform: rotate(90deg); }
+.auth-more-fields { display: none; }
+.auth-more-fields.open { display: block; }
+
+.auth-card .btn {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14.5px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    background: var(--ember);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(255,107,53,.32);
+    transition: transform .15s, box-shadow .15s, background .15s;
+    margin-top: 6px;
+}
+
+.auth-card .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(255,107,53,.4);
+    background: var(--ember-deep);
+}
+
+.auth-card .btn:active { transform: translateY(0); }
+
+.auth-card .btn:disabled {
+    opacity: .7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* پیام خطا */
+.auth-card .alert-error {
+    background: #FCE8E6;
+    color: var(--danger-deep);
+    border: 1px solid #F5C6CB;
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    text-align: right;
+}
+
+/* کارت اطلاعیه ۱۴ روز رایگان */
+.auth-trial-note {
+    background: #FFF1EA;
+    border: 1px solid #FFD9C2;
+    border-radius: 12px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--ember-deep);
+}

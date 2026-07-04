@@ -1,0 +1,62 @@
+/* assets/css/dashboard.css */
+
+/* ════════════════════════════════════════
+   نکته: استایل‌های اختصاصی داشبورد جدید
+   داخل خود Views/dashboard.php قرار دارن
+   (با پیشوند .dash-*) تا تداخلی با بقیه
+   صفحات ایجاد نشه.
+
+   این فایل فقط کلاس‌های عمومی رو نگه می‌داره
+   که ممکنه در صفحات دیگر (مشتریان، تسک‌ها،
+   فعالیت‌ها) هم استفاده شده باشند.
+   ════════════════════════════════════════ */
+
+/* کارت عمومی — احتمالاً در صفحات دیگر هم استفاده می‌شود */
+.card {
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.card-header h3 {
+    font-size: 15px;
+}
+
+/* بج عمومی — در تسک‌ها، فعالیت‌ها و... هم احتمالاً استفاده می‌شود */
+.badge {
+    background: var(--primary);
+    color: white;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.text-link {
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* حالت خالی — استفاده عمومی در لیست‌های خالی سراسر پروژه */
+.empty-state {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-light);
+}
+
+.empty-state p {
+    margin-bottom: 12px;
+    font-size: 14px;
+}
