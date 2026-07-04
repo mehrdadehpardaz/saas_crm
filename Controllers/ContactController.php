@@ -37,10 +37,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($is_primary) {
                 $pdo->prepare("UPDATE contacts SET is_primary = 0 WHERE customer_id = ?")->execute([$customer_id_post]);
             }
+
+            // سازمانِ مخاطب همیشه از روی مشتریِ صاحبش گرفته می‌شود
+            $owning_customer = Customer::getById($customer_id_post);
+            $company_id = $owning_customer['company_id'] ?? null;
             
-            $stmt = $pdo->prepare("INSERT INTO contacts (customer_id, full_name, position, phone, email, is_primary, status) 
-                                   VALUES (?, ?, ?, ?, ?, ?, 'active')");
-            $stmt->execute([$customer_id_post, $full_name, $position, $phone, $email, $is_primary]);
+            $stmt = $pdo->prepare("INSERT INTO contacts (customer_id, company_id, full_name, position, phone, email, is_primary, status) 
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, 'active')");
+            $stmt->execute([$customer_id_post, $company_id, $full_name, $position, $phone, $email, $is_primary]);
             
             header('Location: index.php?page=customers&action=view&id=' . $customer_id_post . '&msg=contact_added');
             exit;
@@ -167,19 +171,21 @@ elseif ($action === 'list' || $action === 'index') {
 
     if ($is_super) {
         $contacts = $pdo->query("
-            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid, u.full_name AS owner_name, cu.user_id AS owner_id
+            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid, u.full_name AS owner_name, cu.user_id AS owner_id, comp.name AS company_label
             FROM contacts co
             LEFT JOIN customers cu ON co.customer_id = cu.id
             LEFT JOIN users u ON cu.user_id = u.id
+            LEFT JOIN companies comp ON co.company_id = comp.id
             WHERE co.status = 'active'
             ORDER BY co.id DESC
         ")->fetchAll();
     } elseif ($is_admin) {
         $stmt = $pdo->prepare("
-            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid, u.full_name AS owner_name, cu.user_id AS owner_id
+            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid, u.full_name AS owner_name, cu.user_id AS owner_id, comp.name AS company_label
             FROM contacts co
             LEFT JOIN customers cu ON co.customer_id = cu.id
             LEFT JOIN users u ON cu.user_id = u.id
+            LEFT JOIN companies comp ON co.company_id = comp.id
             WHERE co.status = 'active' AND u.company_name = ?
             ORDER BY co.id DESC
         ");
@@ -187,10 +193,11 @@ elseif ($action === 'list' || $action === 'index') {
         $contacts = $stmt->fetchAll();
     } else {
         $stmt = $pdo->prepare("
-            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid, u.full_name AS owner_name, cu.user_id AS owner_id
+            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid, u.full_name AS owner_name, cu.user_id AS owner_id, comp.name AS company_label
             FROM contacts co
             LEFT JOIN customers cu ON co.customer_id = cu.id
             LEFT JOIN users u ON cu.user_id = u.id
+            LEFT JOIN companies comp ON co.company_id = comp.id
             WHERE co.status = 'active' AND cu.user_id = ?
             ORDER BY co.id DESC
         ");

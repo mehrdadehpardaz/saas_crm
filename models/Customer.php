@@ -18,10 +18,11 @@ class Customer {
         
         $placeholders = implode(',', array_fill(0, count($member_ids), '?'));
         
-        $sql = "SELECT c.*, i.title as industry_title, u.full_name as agent_name,
+        $sql = "SELECT c.*, i.title as industry_title, u.full_name as agent_name, comp.name as company_label,
                 (SELECT COUNT(*) FROM activities WHERE customer_id = c.id) as activity_count
                 FROM customers c
                 LEFT JOIN industries i ON c.industry_id = i.id
+                LEFT JOIN companies comp ON c.company_id = comp.id
                 JOIN users u ON c.user_id = u.id
                 WHERE c.status = 'active' 
                 AND c.user_id IN ($placeholders)";
@@ -48,9 +49,10 @@ class Customer {
      */
     public static function getById($id) {
         $pdo = getDB();
-        $stmt = $pdo->prepare("SELECT c.*, i.title as industry_title, u.full_name as agent_name
+        $stmt = $pdo->prepare("SELECT c.*, i.title as industry_title, u.full_name as agent_name, comp.name as company_label
                             FROM customers c
                             LEFT JOIN industries i ON c.industry_id = i.id
+                            LEFT JOIN companies comp ON c.company_id = comp.id
                             JOIN users u ON c.user_id = u.id
                             WHERE c.id = ? AND c.status = 'active'");
         $stmt->execute([$id]);
@@ -66,10 +68,11 @@ class Customer {
         try {
             $pdo->beginTransaction();
             
-            $stmt = $pdo->prepare("INSERT INTO customers (user_id, industry_id, company_name, contact_person, phone, email, notes) 
-                                   VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO customers (user_id, company_id, industry_id, company_name, contact_person, phone, email, notes) 
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([
                 $data['user_id'],
+                $data['company_id'] ?? null,
                 $data['industry_id'] ?? null,
                 $data['company_name'],
                 $data['contact_person'] ?? null,
@@ -146,17 +149,24 @@ class Customer {
         }
 
         $pdo = getDB();
+
+        // سازمان (تنانت) مخاطب همیشه از روی مشتریِ صاحبش گرفته می‌شود —
+        // نه از کاربر جاری — تا همیشه با سازمانِ واقعیِ آن مشتری یکی باشد.
+        $stmt = $pdo->prepare("SELECT company_id FROM customers WHERE id = ?");
+        $stmt->execute([$customer_id]);
+        $company_id = $stmt->fetchColumn() ?: null;
+
         $stmt = $pdo->prepare("SELECT id FROM contacts WHERE customer_id = ? AND is_primary = 1 AND status = 'active' LIMIT 1");
         $stmt->execute([$customer_id]);
         $existing = $stmt->fetch();
 
         if ($existing) {
-            $stmt = $pdo->prepare("UPDATE contacts SET full_name = ?, position = ?, phone = ?, email = ? WHERE id = ?");
-            $stmt->execute([$full_name, $position, $phone, $email, $existing['id']]);
+            $stmt = $pdo->prepare("UPDATE contacts SET full_name = ?, position = ?, phone = ?, email = ?, company_id = ? WHERE id = ?");
+            $stmt->execute([$full_name, $position, $phone, $email, $company_id, $existing['id']]);
         } else {
-            $stmt = $pdo->prepare("INSERT INTO contacts (customer_id, full_name, position, phone, email, is_primary, status) 
-                                   VALUES (?, ?, ?, ?, ?, 1, 'active')");
-            $stmt->execute([$customer_id, $full_name, $position, $phone, $email]);
+            $stmt = $pdo->prepare("INSERT INTO contacts (customer_id, company_id, full_name, position, phone, email, is_primary, status) 
+                                   VALUES (?, ?, ?, ?, ?, ?, 1, 'active')");
+            $stmt->execute([$customer_id, $company_id, $full_name, $position, $phone, $email]);
         }
     }
 

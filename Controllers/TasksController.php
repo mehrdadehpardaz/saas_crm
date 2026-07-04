@@ -31,10 +31,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $followup_date = !empty($_POST['next_followup_date']) ? 
                 $_POST['next_followup_date'] . ' ' . ($_POST['next_followup_time'] ?? '09:00') . ':00' : null;
+
+            // سازمانِ تسک همیشه از روی مشتریِ صاحبش گرفته می‌شود، نه از
+            // کاربر سازنده — تا با سازمان واقعیِ آن مشتری هماهنگ بماند.
+            $owning_customer = Customer::getById($customer_id_post);
             
             $task_id = Task::create([
                 'user_id'             => $user['id'],
                 'customer_id'         => $customer_id_post,
+                'company_id'          => $owning_customer['company_id'] ?? null,
                 'title'               => $title,
                 'next_followup_date'  => $followup_date,
                 'next_followup_topic' => trim($_POST['next_followup_topic'] ?? '')
@@ -221,10 +226,11 @@ if ($action === 'list_all') {
     
     $where_clause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
     
-    $sql = "SELECT t.*, c.company_name, u.full_name as agent_name
+    $sql = "SELECT t.*, c.company_name, u.full_name as agent_name, comp.name as company_label
             FROM tasks t
             JOIN customers c ON t.customer_id = c.id
             JOIN users u ON t.user_id = u.id
+            LEFT JOIN companies comp ON t.company_id = comp.id
             $where_clause
             ORDER BY t.next_followup_date ASC, t.created_at DESC";
     

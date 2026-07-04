@@ -17,9 +17,10 @@ class Task {
         
         $placeholders = implode(',', array_fill(0, count($member_ids), '?'));
         
-        $sql = "SELECT t.*, u.full_name as agent_name
+        $sql = "SELECT t.*, u.full_name as agent_name, comp.name as company_label
                 FROM tasks t
                 JOIN users u ON t.user_id = u.id
+                LEFT JOIN companies comp ON t.company_id = comp.id
                 WHERE t.customer_id = ?
                 AND t.user_id IN ($placeholders)";
         
@@ -35,10 +36,11 @@ class Task {
     public static function getById($id, $user_id = null, $is_manager = false) {
         $pdo = getDB();
         
-        $sql = "SELECT t.*, c.company_name, u.full_name as agent_name
+        $sql = "SELECT t.*, c.company_name, u.full_name as agent_name, comp.name as company_label
                 FROM tasks t
                 JOIN customers c ON t.customer_id = c.id
                 JOIN users u ON t.user_id = u.id
+                LEFT JOIN companies comp ON t.company_id = comp.id
                 WHERE t.id = ?";
         
         $stmt = $pdo->prepare($sql);
@@ -48,11 +50,12 @@ class Task {
     
     public static function create($data) {
         $pdo = getDB();
-        $stmt = $pdo->prepare("INSERT INTO tasks (user_id, customer_id, title, next_followup_date, next_followup_topic) 
-                               VALUES (?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO tasks (user_id, customer_id, company_id, title, next_followup_date, next_followup_topic) 
+                               VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $data['user_id'],
             $data['customer_id'],
+            $data['company_id'] ?? null,
             $data['title'],
             $data['next_followup_date'] ?? null,
             $data['next_followup_topic'] ?? null

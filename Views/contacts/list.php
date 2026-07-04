@@ -73,6 +73,7 @@
 .ctl-edit-link:hover { background:#D5E5FC; }
 .ctl-primary-icon { color:var(--ember); font-size:14px; }
 .ctl-owner-tag { background:#E7F7F3; color:var(--teal-deep); padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+.ctl-org-tag { background:#F3E8FD; color:#9c27b0; padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
 .ctl-tel-link { color:var(--blue); text-decoration:none; direction:ltr; display:inline-flex; align-items:center; gap:4px; }
 .ctl-tel-link:hover { text-decoration:underline; }
 
@@ -183,6 +184,9 @@
                     <th data-type="text">شرکت<span class="sort-arrow">▲</span></th>
                     <th data-type="text">تلفن<span class="sort-arrow">▲</span></th>
                     <th data-type="text">ثبت‌کننده<span class="sort-arrow">▲</span></th>
+                    <?php if ($is_super): ?>
+                    <th data-type="text">سازمان<span class="sort-arrow">▲</span></th>
+                    <?php endif; ?>
                     <th class="no-sort" style="text-align:center">اصلی</th>
                     <th class="no-sort"><span class="sr-only">عملیات</span></th>
                 </tr>
@@ -205,6 +209,9 @@
                         <?php endif; ?>
                     </td>
                     <td><?php if ($c['owner_name']): ?><span class="ctl-owner-tag"><?= crm_sanitize($c['owner_name']) ?></span><?php else: ?>—<?php endif; ?></td>
+                    <?php if ($is_super): ?>
+                    <td><span class="ctl-org-tag"><?= crm_sanitize($c['company_label'] ?? '—') ?></span></td>
+                    <?php endif; ?>
                     <td style="text-align:center"><?= $c['is_primary'] ? '<span class="ctl-primary-icon" aria-label="مخاطب اصلی">★</span>' : '—' ?></td>
                     <td>
                         <a href="index.php?page=contacts&action=edit&id=<?= $c['id'] ?>" class="ctl-edit-link">ویرایش</a>
@@ -247,6 +254,9 @@
             <?php endif; ?>
             <?php if ($c['owner_name']): ?>
             <div><span class="ctl-owner-tag"><?= crm_sanitize($c['owner_name']) ?></span></div>
+            <?php endif; ?>
+            <?php if ($is_super): ?>
+            <div><span class="ctl-org-tag"><?= crm_sanitize($c['company_label'] ?? '—') ?></span></div>
             <?php endif; ?>
         </div>
     </div>

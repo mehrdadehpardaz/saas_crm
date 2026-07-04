@@ -28,16 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($is_super) {
             $company_name = trim($_POST['company_name'] ?? '');
-            // اگر سوپرادمین نام شرکت را خالی بگذارد، مثل ثبت‌نام معمولی از
-            // نام خود کاربر جدید استفاده می‌شود. این مهم است چون company_name
-            // مبنای تشخیص «هم‌شرکتی بودن» در کل پروژه است — اگر خالی بماند،
-            // این کاربر (و بعداً زیرمجموعه‌هایش) از دید ادمین/مدیرِ خودشان
-            // در لیست‌ها دیده نمی‌شوند.
-            if ($company_name === '') {
-                $company_name = $full_name;
-            }
+            $company_id = crm_get_or_create_company_id($company_name);
         } else {
             $company_name = $user['company_name'] ?? null;
+            $company_id = $user['company_id'] ?? null;
         }
         
         if (!$is_super) {
@@ -46,27 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (!$is_admin && $role === 'manager') {
                 $role = 'agent';
-            }
-        }
-
-        // ── تعیین مدیر بالادستی (پرنت) ──
-        // پیش‌فرض: خود کاربر ایجادکننده. اگر ادمین/سوپرادمین از فرم یک
-        // پرنت معتبر انتخاب کرده باشد (مثلاً یک مدیر فروش زیرمجموعه خودش)
-        // همان استفاده می‌شود؛ در غیر این صورت به‌صورت امن نادیده گرفته می‌شود.
-        $parent_id = $user['id'];
-        if (($is_admin || $is_super) && !empty($_POST['parent_id'])) {
-            $requested_parent_id = (int)$_POST['parent_id'];
-            $pdo_parent_check = getDB();
-            if ($is_super) {
-                // سوپر ادمین می‌تواند هر کاربری را به‌عنوان پرنت انتخاب کند
-                $stmt = $pdo_parent_check->prepare("SELECT id FROM users WHERE id = ?");
-                $stmt->execute([$requested_parent_id]);
-                if ($stmt->fetch()) $parent_id = $requested_parent_id;
-            } else {
-                // ادمین فقط می‌تواند خودش یا یکی از مدیران فروش زیرمجموعه‌اش را انتخاب کند
-                $stmt = $pdo_parent_check->prepare("SELECT id FROM users WHERE id = ? AND (id = ? OR (parent_id = ? AND role = 'manager'))");
-                $stmt->execute([$requested_parent_id, $user['id'], $user['id']]);
-                if ($stmt->fetch()) $parent_id = $requested_parent_id;
             }
         }
         
@@ -106,15 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if (empty($error)) {
                     $hashed = password_hash($password, PASSWORD_DEFAULT);
-                    // ستون max_users_limit در دیتابیس پیش‌فرض ۱ دارد. اگر این کاربر
-                    // جدید خودش «مدیر شرکت» (admin/super_admin) است، باید سقف
-                    // معقولی مثل نسخه رایگان (۵ کاربر) داشته باشد — وگرنه منطق
-                    // فعال/غیرفعال‌سازی خودکار در index.php بقیه زیرمجموعه‌هایش
-                    // (مدیر فروش، کارشناس) را بلافاصله غیرفعال می‌کند.
-                    $new_max_users_limit = in_array($role, ['admin', 'super_admin']) ? 5 : 1;
-                    $stmt = $pdo->prepare("INSERT INTO users (mobile, password, full_name, company_name, position_title, phone, role, parent_id, plan_type, plan_expiry, max_users_limit, status) 
-                                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'trial', DATE_ADD(NOW(), INTERVAL 14 DAY), ?, 'active')");
-                    $stmt->execute([$mobile, $hashed, $full_name, $company_name, $position_title, $phone, $role, $parent_id, $new_max_users_limit]);
+                    $stmt = $pdo->prepare("INSERT INTO users (mobile, password, full_name, company_name, company_id, position_title, phone, role, parent_id, plan_type, plan_expiry, status) 
+                                           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'trial', DATE_ADD(NOW(), INTERVAL 14 DAY), 'active')");
+                    $stmt->execute([$mobile, $hashed, $full_name, $company_name, $company_id, $position_title, $phone, $role, $user['id']]);
                     
                     header('Location: index.php?page=users&msg=created');
                     exit;
@@ -146,17 +113,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // چک دسترسی
-        // نکته: قبلاً برای ادمین همیشه true بود که یعنی حتی کاربر شرکت دیگر هم
-        // قابل ویرایش بود. حالا مثل بقیه پروژه بر اساس عضویت در همان شرکت
-        // (company_name خودِ ادمین) بررسی می‌شود — بدون پیمایش parent_id،
-        // چون اگر ادمین توسط سوپرادمین ساخته شده باشد، آن پیمایش تا
-        // سوپرادمین بالا می‌رود که اصلاً جزو همان شرکت مشتری نیست.
         $can_edit = false;
         if ($is_super) {
             $can_edit = true;
         } elseif ($is_admin) {
-            $company_members = crm_get_company_members($user['id']);
-            $can_edit = in_array((int)$edit_user_data['id'], $company_members);
+            $can_edit = true;
         } elseif ($user['role'] === 'manager' && $edit_user_data['parent_id'] == $user['id']) {
             $can_edit = true;
         } elseif ($id == $user['id']) {
@@ -202,7 +163,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // آپدیت company_name (فقط super_admin)
         if ($is_super && isset($_POST['company_name'])) {
-            $pdo->prepare("UPDATE users SET company_name = ? WHERE id = ?")->execute([trim($_POST['company_name']), $id]);
+            $new_company_name = trim($_POST['company_name']);
+            $new_company_id = crm_get_or_create_company_id($new_company_name);
+            $pdo->prepare("UPDATE users SET company_name = ?, company_id = ? WHERE id = ?")
+                ->execute([$new_company_name, $new_company_id, $id]);
         }
         
         // آپدیت parent_id (فقط admin/super_admin)
@@ -223,16 +187,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // اگه فعال شده و plan_expiry گذشته، تمدید ۳۰ روز
         if ($status_new === 'active' && strtotime($edit_user_data['plan_expiry']) <= time()) {
             $pdo->prepare("UPDATE users SET plan_expiry = DATE_ADD(NOW(), INTERVAL 30 DAY) WHERE id = ?")->execute([$id]);
-        }
-
-        // ── تغییر رمز عبور توسط مدیر بالادستی ──
-        // چون $can_edit از قبل احراز شده (ادمین/سوپرادمین/مدیر فروش نسبت به
-        // زیرمجموعه خودش)، اگر رمز جدیدی وارد شده و طول معتبر داشته باشد
-        // اعمال می‌شود؛ در غیر این صورت رمز فعلی کاربر دست‌نخورده می‌ماند.
-        $new_password = $_POST['new_password'] ?? '';
-        if ($new_password !== '' && strlen($new_password) >= 6) {
-            $hashed_new = password_hash($new_password, PASSWORD_DEFAULT);
-            $pdo->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$hashed_new, $id]);
         }
         
         header('Location: index.php?page=users&msg=updated');
@@ -265,14 +219,12 @@ if ($action === 'list' || !$action) {
         $stmt = $pdo->query("SELECT * FROM users ORDER BY company_name, created_at DESC");
         $users_list = $stmt->fetchAll();
     } elseif ($is_admin) {
-        // بر اساس عضویت در همان شرکت (company_name خودِ ادمین) — بدون پیمایش
-        // parent_id تا ریشه، چون اگر این ادمین را سوپرادمین ساخته باشد،
-        // آن پیمایش تا سوپرادمین بالا می‌رفت که جزو این شرکت نیست.
-        $member_ids = crm_get_company_members($user['id']);
-        if (empty($member_ids)) $member_ids = [(int)$user['id']];
-        $placeholders = implode(',', array_fill(0, count($member_ids), '?'));
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE id IN ($placeholders) ORDER BY created_at DESC");
-        $stmt->execute($member_ids);
+        $stmt = $pdo->prepare("
+            SELECT * FROM users 
+            WHERE id = ? OR parent_id = ? OR parent_id IN (SELECT id FROM users WHERE parent_id = ?)
+            ORDER BY created_at DESC
+        ");
+        $stmt->execute([$user['id'], $user['id'], $user['id']]);
         $users_list = $stmt->fetchAll();
     } elseif ($user['role'] === 'manager') {
         $stmt = $pdo->prepare("
@@ -303,8 +255,7 @@ elseif ($action === 'edit' && $id) {
     if ($is_super) {
         $can_edit = true;
     } elseif ($is_admin) {
-        $company_members = crm_get_company_members($user['id']);
-        $can_edit = in_array((int)$id, $company_members);
+        $can_edit = true;
     } elseif ($user['role'] === 'manager') {
         $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ? AND parent_id = ?");
         $stmt->execute([$id, $user['id']]);
@@ -340,18 +291,21 @@ elseif ($action === 'view' && $id) {
     if ($is_super) {
         $has_access = true;
     } elseif ($is_admin) {
-        // بر اساس company_name خودِ ادمین — بدون پیمایش parent_id تا ریشه،
-        // چون اگر این ادمین را سوپرادمین ساخته باشد (parent_id = سوپرادمین)،
-        // آن پیمایش اشتباهاً تا سوپرادمین بالا می‌رفت که جزو این شرکت نیست.
         $company_members = crm_get_company_members($user['id']);
-        $has_access = in_array((int)$id, $company_members);
+        $has_access = in_array($id, $company_members);
     } elseif ($user['role'] === 'manager') {
         if ($id == $user['id']) {
             $has_access = true;
         } else {
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ? AND (parent_id = ? OR id = (SELECT parent_id FROM users WHERE id = ?))");
-            $stmt->execute([$id, $user['id'], $user['id']]);
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE parent_id = ? AND id = ?");
+            $stmt->execute([$user['id'], $id]);
             if ($stmt->fetch()) $has_access = true;
+            
+            if (!$has_access && $user['parent_id']) {
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE id = ? AND id = ?");
+                $stmt->execute([$user['parent_id'], $id]);
+                if ($stmt->fetch()) $has_access = true;
+            }
         }
     } else {
         $has_access = ($id == $user['id']);

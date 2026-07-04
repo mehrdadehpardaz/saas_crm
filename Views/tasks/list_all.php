@@ -64,6 +64,7 @@
 .tla-badge-completed { background:#E8F0FE; color:var(--blue); }
 .tla-badge-sold      { background:#FFF3DD; color:var(--warning-deep); }
 .tla-badge-cancelled { background:#FCE8E6; color:var(--danger); }
+.tla-badge-org        { background:#F3E8FD; color:#9c27b0; }
 
 /* footer summary */
 .tla-footer { display:flex; justify-content:space-between; align-items:center; margin-top:13px; font-size:11.5px; color:var(--ink-soft); flex-wrap:wrap; gap:6px; }
@@ -166,6 +167,9 @@
                 <th>عنوان تسک</th>
                 <th>مشتری</th>
                 <th>مالک</th>
+                <?php if ($is_super): ?>
+                <th>سازمان</th>
+                <?php endif; ?>
                 <th>پیگیری بعدی</th>
                 <th>ایجاد</th>
                 <th>وضعیت</th>
@@ -216,6 +220,9 @@
                 </td>
                 <td style="font-size:12px"><?= crm_sanitize($t['company_name']) ?></td>
                 <td style="font-size:11.5px;color:var(--ink-soft)"><?= crm_sanitize($t['agent_name']) ?></td>
+                <?php if ($is_super): ?>
+                <td><span class="tla-badge tla-badge-org"><?= crm_sanitize($t['company_label'] ?? '—') ?></span></td>
+                <?php endif; ?>
                 <td style="font-size:11.5px;color:<?= $followup_color ?>;white-space:nowrap">
                     <?= $followup ? (function_exists('jdatetime') ? jdatetime($t['next_followup_date']) : date('Y/m/d H:i', $followup)) : '—' ?>
                 </td>

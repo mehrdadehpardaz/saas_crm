@@ -60,6 +60,7 @@
 .al-type-email   { background:#E7F7F3; color:var(--teal); }
 .al-type-note    { background:var(--paper-2); color:var(--ink-soft); }
 .al-agent-tag { background:var(--paper-2); color:var(--ink-soft); padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.al-org-tag { background:#F3E8FD; color:#9c27b0; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
 
 .al-desc { font-size:13px; color:var(--ink); line-height:1.7; margin-bottom:10px; }
 
@@ -149,6 +150,9 @@
                     <span class="al-type-tag <?= $type_class ?>"><?= $type_label ?></span>
                     <?php if ($is_manager): ?>
                     <span class="al-agent-tag"><?= crm_sanitize($a['agent_name']) ?></span>
+                    <?php endif; ?>
+                    <?php if ($is_super): ?>
+                    <span class="al-org-tag"><?= crm_sanitize($a['company_label'] ?? '—') ?></span>
                     <?php endif; ?>
                 </div>
             </div>

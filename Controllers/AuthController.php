@@ -46,10 +46,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (empty($company_name)) {
                     $company_name = $full_name;
                 }
+
+                // ساخت/پیدا کردن ردیف واقعی شرکت در جدول companies
+                $company_id = crm_get_or_create_company_id($company_name);
                 
-                $stmt = $pdo->prepare("INSERT INTO users (mobile, password, full_name, company_name, position_title, role, plan_type, plan_expiry, max_users_limit, status) 
-                                       VALUES (?, ?, ?, ?, 'مدیر', 'admin', 'trial', DATE_ADD(NOW(), INTERVAL 14 DAY), 5, 'active')");
-                $stmt->execute([$mobile, $hashed, $full_name, $company_name]);
+                $stmt = $pdo->prepare("INSERT INTO users (mobile, password, full_name, company_name, company_id, position_title, role, plan_type, plan_expiry, max_users_limit, status) 
+                                       VALUES (?, ?, ?, ?, ?, 'مدیر', 'admin', 'trial', DATE_ADD(NOW(), INTERVAL 14 DAY), 5, 'active')");
+                $stmt->execute([$mobile, $hashed, $full_name, $company_name, $company_id]);
                 
                 $_SESSION['user_id'] = (int)$pdo->lastInsertId();
                 crm_redirect('index.php?page=dashboard');

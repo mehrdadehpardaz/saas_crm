@@ -79,6 +79,31 @@ function crm_has_active_subscription($user) {
         return strtotime($user['plan_expiry'] ?? 'now') > time();
     }
 
+/**
+ * گرفتن id شرکت بر اساس نام؛ اگر شرکتی با این نام وجود نداشت، ساخته می‌شود.
+ * منبع واحد برای تبدیل «نام آزاد شرکت» (که جاهایی مثل ثبت‌نام یا فرم
+ * سوپر ادمین به‌صورت متن آزاد گرفته می‌شود) به یک ردیف واقعی در جدول
+ * companies — تا company_id همیشه به یک رکورد معتبر اشاره کند.
+ */
+function crm_get_or_create_company_id($name) {
+    $name = trim((string)$name);
+    if ($name === '') {
+        return null;
+    }
+
+    $pdo = getDB();
+    $stmt = $pdo->prepare("SELECT id FROM companies WHERE name = ? LIMIT 1");
+    $stmt->execute([$name]);
+    $existing = $stmt->fetchColumn();
+    if ($existing) {
+        return (int)$existing;
+    }
+
+    $stmt = $pdo->prepare("INSERT INTO companies (name) VALUES (?)");
+    $stmt->execute([$name]);
+    return (int)$pdo->lastInsertId();
+}
+
 function crm_get_company_root($user_id) {
     // super_admin خودش root هست
     if (crm_is_super_admin()) {

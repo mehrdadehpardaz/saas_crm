@@ -150,7 +150,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // آپدیت company_name اگر وارد شده
         if (!empty($_POST['company_name'])) {
             $cn = crm_sanitize($_POST['company_name']);
-            $pdo->prepare("UPDATE users SET company_name = ? WHERE id = ?")->execute([$cn, $user['id']]);
+            $cid = crm_get_or_create_company_id($cn);
+            $pdo->prepare("UPDATE users SET company_name = ?, company_id = ? WHERE id = ?")->execute([$cn, $cid, $user['id']]);
         }
         
         if (empty($error)) {

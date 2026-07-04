@@ -1,33 +1,71 @@
--- database.sql
-CREATE DATABASE IF NOT EXISTS crm_saas CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE crm_saas;
+-- database_fixed.sql
+-- آماده‌سازی شده برای cPanel - نام دیتابیس را از cPanel وارد کنید
 
-CREATE TABLE `users` (
+SET FOREIGN_KEY_CHECKS=0;
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
+-- =============================================
+-- جدول users
+-- =============================================
+CREATE TABLE IF NOT EXISTS `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `mobile` VARCHAR(15) NOT NULL UNIQUE,
   `password` VARCHAR(255) NOT NULL,
   `full_name` VARCHAR(100) NOT NULL,
-  `role` ENUM('admin','manager','agent') NOT NULL DEFAULT 'agent',
+  `company_name` VARCHAR(150) DEFAULT NULL,
+  `position_title` VARCHAR(100) DEFAULT NULL,
+  `phone` VARCHAR(20) DEFAULT NULL,
+  `role` ENUM('super_admin','admin','manager','agent') NOT NULL DEFAULT 'agent',
+  `status` ENUM('active','inactive') NOT NULL DEFAULT 'active',
   `parent_id` INT DEFAULT NULL,
   `plan_type` ENUM('trial','monthly','yearly') NOT NULL DEFAULT 'trial',
   `plan_expiry` DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP + INTERVAL 14 DAY),
+  `credit` DECIMAL(10,0) DEFAULT 0,
+  `max_users_limit` INT DEFAULT 1,
+  `plan_id` INT DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`parent_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `industries` (
+-- =============================================
+-- جدول industries
+-- =============================================
+CREATE TABLE IF NOT EXISTS `industries` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `title` VARCHAR(100) NOT NULL UNIQUE,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- مقادیر پیش‌فرض صنایع
-INSERT INTO `industries` (`title`) VALUES 
+INSERT IGNORE INTO `industries` (`title`) VALUES 
 ('فولاد'), ('سیمان'), ('ساختمانی'), ('پتروشیمی'), 
 ('نفت و گاز'), ('خودروسازی'), ('فناوری اطلاعات'), ('مخابرات'),
 ('داروسازی'), ('غذایی'), ('نساجی'), ('معدن');
 
-CREATE TABLE `customers` (
+-- =============================================
+-- جدول plans
+-- =============================================
+CREATE TABLE IF NOT EXISTS `plans` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL,
+  `type` ENUM('base','per_user') NOT NULL,
+  `price_monthly` DECIMAL(10,0) NOT NULL DEFAULT 0,
+  `price_yearly` DECIMAL(10,0) NOT NULL DEFAULT 0,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO `plans` (`name`, `type`, `price_monthly`, `price_yearly`) VALUES
+('هزینه پایه (اکانت اصلی)', 'base', 100000, 1000000),
+('هزینه هر کاربر اضافه', 'per_user', 100000, 1000000);
+
+-- اضافه کردن FK پلن به users
+ALTER TABLE `users` ADD CONSTRAINT `fk_users_plan` 
+  FOREIGN KEY (`plan_id`) REFERENCES `plans`(`id`) ON DELETE SET NULL;
+
+-- =============================================
+-- جدول customers
+-- =============================================
+CREATE TABLE IF NOT EXISTS `customers` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NOT NULL,
   `industry_id` INT DEFAULT NULL,
@@ -36,12 +74,16 @@ CREATE TABLE `customers` (
   `phone` VARCHAR(20) DEFAULT NULL,
   `email` VARCHAR(100) DEFAULT NULL,
   `notes` TEXT DEFAULT NULL,
+  `status` ENUM('active','inactive') NOT NULL DEFAULT 'active',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`industry_id`) REFERENCES `industries`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `contacts` (
+-- =============================================
+-- جدول contacts
+-- =============================================
+CREATE TABLE IF NOT EXISTS `contacts` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `customer_id` INT NOT NULL,
   `full_name` VARCHAR(100) NOT NULL,
@@ -49,27 +91,49 @@ CREATE TABLE `contacts` (
   `phone` VARCHAR(20) DEFAULT NULL,
   `email` VARCHAR(100) DEFAULT NULL,
   `is_primary` TINYINT(1) NOT NULL DEFAULT 0,
+  `status` ENUM('active','inactive') NOT NULL DEFAULT 'active',
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `activities` (
+-- =============================================
+-- جدول tasks (قبل از activities باید ساخته شود)
+-- =============================================
+CREATE TABLE IF NOT EXISTS `tasks` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NOT NULL,
   `customer_id` INT NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `status` ENUM('active','completed','cancelled','sold') NOT NULL DEFAULT 'active',
+  `next_followup_date` DATETIME DEFAULT NULL,
+  `next_followup_topic` VARCHAR(255) DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
+-- جدول activities (بعد از tasks)
+-- =============================================
+CREATE TABLE IF NOT EXISTS `activities` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `customer_id` INT NOT NULL,
+  `task_id` INT DEFAULT NULL,
   `contact_id` INT DEFAULT NULL,
   `type` ENUM('call','meeting','email','note') NOT NULL DEFAULT 'call',
   `description` TEXT DEFAULT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `task_id` INT DEFAULT NULL AFTER `customer_id`,
-
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE,
   FOREIGN KEY (`contact_id`) REFERENCES `contacts`(`id`) ON DELETE SET NULL,
   FOREIGN KEY (`task_id`) REFERENCES `tasks`(`id`) ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `subscriptions` (
+-- =============================================
+-- جدول subscriptions
+-- =============================================
+CREATE TABLE IF NOT EXISTS `subscriptions` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NOT NULL,
   `plan` VARCHAR(20) NOT NULL,
@@ -79,90 +143,84 @@ CREATE TABLE `subscriptions` (
   `end_date` DATETIME NOT NULL,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `tasks` (
+SET FOREIGN_KEY_CHECKS=1;
+
+-- پایان
+
+
+-- migration_companies.sql
+-- تغییر رویه‌ای: جدول مستقل «شرکت‌ها» + برچسب company_id روی هر رکورد
+-- (کاربر، مشتری، مخاطب، تسک، فعالیت) علاوه بر «سازنده»‌اش (user_id).
+--
+-- تا قبل از این، تنها راه تشخیص «این رکورد مال کدوم شرکته» رشته‌ی
+-- users.company_name بود که باید هر بار از طریق user_id دنبال می‌شد.
+-- این مهاجرت یک منبع واحد (companies) می‌سازه و company_id رو مستقیم
+-- روی خودِ هر جدول کپی می‌کنه — هم برای فیلتر/گزارش سریع‌تر، هم برای
+-- این‌که اگه بعداً یوزری بین شرکت‌ها جابه‌جا شد، رکوردهای قدیمی‌اش
+-- برچسب شرکتِ زمانِ ساختشون رو نگه دارن.
+
+USE crm_saas;
+
+-- ── ۱) جدول شرکت‌ها ──
+CREATE TABLE IF NOT EXISTS `companies` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `user_id` INT NOT NULL,
-  `customer_id` INT NOT NULL,
-  `title` VARCHAR(255) NOT NULL,
-  `status` ENUM('active','completed','cancelled') DEFAULT 'active',
-  `next_followup_date` DATETIME DEFAULT NULL,
-  `next_followup_topic` VARCHAR(255) DEFAULT NULL,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`customer_id`) REFERENCES `customers`(`id`) ON DELETE CASCADE
+  `name` VARCHAR(150) NOT NULL UNIQUE,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-ALTER TABLE `users` 
-ADD COLUMN `company_name` VARCHAR(150) DEFAULT NULL AFTER `full_name`,
-ADD COLUMN `position_title` VARCHAR(100) DEFAULT NULL AFTER `company_name`,
-ADD COLUMN `phone` VARCHAR(20) DEFAULT NULL AFTER `position_title`;
+-- ── ۲) پر کردن جدول شرکت‌ها از روی users.company_name فعلی ──
+INSERT IGNORE INTO `companies` (`name`)
+SELECT DISTINCT `company_name` FROM `users`
+WHERE `company_name` IS NOT NULL AND `company_name` <> '';
 
-ALTER TABLE `users` MODIFY COLUMN `role` ENUM('super_admin','admin','manager','agent') NOT NULL DEFAULT 'agent';
+-- ── ۳) اضافه کردن company_id به users و پر کردنش ──
+ALTER TABLE `users` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `company_name`;
 
--- اضافه کردن ستون status به customers
-ALTER TABLE `customers` 
-ADD COLUMN `status` ENUM('active','inactive') NOT NULL DEFAULT 'active' AFTER `notes`;
+UPDATE `users` u
+JOIN `companies` c ON c.`name` = u.`company_name`
+SET u.`company_id` = c.`id`;
 
--- اضافه کردن ستون status به contacts
-ALTER TABLE `contacts` 
-ADD COLUMN `status` ENUM('active','inactive') NOT NULL DEFAULT 'active' AFTER `is_primary`;
+ALTER TABLE `users`
+  ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;
 
--- آپدیت رکوردهای موجود
-UPDATE `customers` SET `status` = 'active';
-UPDATE `contacts` SET `status` = 'active';
+-- ── ۴) customers: company_id از روی صاحب مشتری (user_id) ──
+ALTER TABLE `customers` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `user_id`;
 
--- جدول پلن‌ها
-CREATE TABLE IF NOT EXISTS `plans` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(100) NOT NULL,
-  `type` ENUM('individual','company') NOT NULL,
-  `max_users` INT NOT NULL DEFAULT 1,
-  `price_monthly` DECIMAL(10,0) NOT NULL DEFAULT 0,
-  `price_yearly` DECIMAL(10,0) NOT NULL DEFAULT 0,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+UPDATE `customers` cu
+JOIN `users` u ON u.`id` = cu.`user_id`
+SET cu.`company_id` = u.`company_id`;
 
--- پلن‌های پیش‌فرض
-INSERT INTO `plans` (`name`, `type`, `max_users`, `price_monthly`, `price_yearly`) VALUES
-('کاربر عادی', 'individual', 1, 100000, 1000000),
-('شرکت ۳ کاربره', 'company', 3, 500000, 5000000),
-('شرکت ۵ کاربره', 'company', 5, 700000, 7000000),
-('شرکت ۱۰ کاربره', 'company', 10, 1200000, 12000000);
+ALTER TABLE `customers`
+  ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;
 
--- اضافه کردن فیلدهای جدید به users
-ALTER TABLE `users` 
-ADD COLUMN `credit` DECIMAL(10,0) DEFAULT 0 AFTER `plan_expiry`,
-ADD COLUMN `max_users_limit` INT DEFAULT 1 AFTER `credit`,
-ADD COLUMN `plan_id` INT DEFAULT NULL AFTER `max_users_limit`,
-ADD FOREIGN KEY (`plan_id`) REFERENCES `plans`(`id`) ON DELETE SET NULL;
+-- ── ۵) contacts: company_id از روی مشتریِ صاحبِ مخاطب ──
+ALTER TABLE `contacts` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `customer_id`;
 
-ALTER TABLE `users` 
-ADD COLUMN `status` ENUM('active','inactive') NOT NULL DEFAULT 'active' AFTER `role`;
+UPDATE `contacts` co
+JOIN `customers` cu ON cu.`id` = co.`customer_id`
+SET co.`company_id` = cu.`company_id`;
 
--- ۱. حذف FK از users
-ALTER TABLE `users` DROP FOREIGN KEY `users_ibfk_3`;
+ALTER TABLE `contacts`
+  ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;
 
--- ۲. حالا میتونی plans رو drop کنی
-DROP TABLE IF EXISTS `plans`;
+-- ── ۶) tasks: company_id از روی مشتریِ همان تسک ──
+ALTER TABLE `tasks` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `customer_id`;
 
--- ۳. ساخت جدول جدید
-CREATE TABLE `plans` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `name` VARCHAR(100) NOT NULL,
-  `type` ENUM('base','per_user') NOT NULL,
-  `price_monthly` DECIMAL(10,0) NOT NULL DEFAULT 0,
-  `price_yearly` DECIMAL(10,0) NOT NULL DEFAULT 0,
-  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
+UPDATE `tasks` t
+JOIN `customers` cu ON cu.`id` = t.`customer_id`
+SET t.`company_id` = cu.`company_id`;
 
--- ۴. درج دو سطر
-INSERT INTO `plans` (`name`, `type`, `price_monthly`, `price_yearly`) VALUES
-('هزینه پایه (اکانت اصلی)', 'base', 100000, 1000000),
-('هزینه هر کاربر اضافه', 'per_user', 100000, 1000000);
+ALTER TABLE `tasks`
+  ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;
 
--- ۵. دوباره FK رو اضافه کن
-ALTER TABLE `users` ADD FOREIGN KEY (`plan_id`) REFERENCES `plans`(`id`) ON DELETE SET NULL;
+-- ── ۷) activities: company_id از روی مشتریِ همان فعالیت ──
+ALTER TABLE `activities` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `customer_id`;
 
-ALTER TABLE tasks MODIFY status ENUM('active','completed','cancelled','sold') NOT NULL DEFAULT 'active';
+UPDATE `activities` a
+JOIN `customers` cu ON cu.`id` = a.`customer_id`
+SET a.`company_id` = cu.`company_id`;
+
+ALTER TABLE `activities`
+  ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;

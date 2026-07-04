@@ -47,6 +47,7 @@ $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
 .cv-info-table td { padding:10px 16px; color:var(--ink); font-weight:500; }
 .cv-tel-link { color:var(--blue); text-decoration:none; direction:ltr; display:inline-flex; align-items:center; gap:5px; }
 .cv-tel-link:hover { text-decoration:underline; }
+.cv-org-tag { background:#F3E8FD; color:#9c27b0; padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; margin-right:8px; }
 
 /* ── جدول مخاطبین (مثل اکسل) ── */
 .cv-table-wrap { overflow-x:auto; }
@@ -118,6 +119,15 @@ $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
 <div class="cv-card">
     <div class="cv-card-hd"><h3>اطلاعات مشتری</h3></div>
     <table class="cv-info-table">
+        <?php if ($is_super): ?>
+        <tr>
+            <th>سازنده</th>
+            <td>
+                <?= crm_sanitize($customer['agent_name'] ?? '—') ?>
+                <span class="cv-org-tag"><?= crm_sanitize($customer['company_label'] ?? '—') ?></span>
+            </td>
+        </tr>
+        <?php endif; ?>
         <tr><th>صنعت</th><td><?= crm_sanitize($customer['industry_title'] ?? 'ثبت نشده') ?></td></tr>
         <tr><th>شخص اصلی</th><td><?= crm_sanitize($customer['contact_person'] ?? 'ندارد') ?></td></tr>
         <tr>

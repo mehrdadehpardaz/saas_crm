@@ -168,12 +168,13 @@ class Activity {
         $pdo = getDB();
 
         $sql = "SELECT a.*, c.company_name, co.full_name as contact_name, u.full_name as agent_name,
-                       t.title as task_title
+                       t.title as task_title, comp.name as company_label
                 FROM activities a
                 JOIN customers c ON a.customer_id = c.id
                 LEFT JOIN contacts co ON a.contact_id = co.id
                 JOIN users u ON a.user_id = u.id
                 LEFT JOIN tasks t ON a.task_id = t.id
+                LEFT JOIN companies comp ON a.company_id = comp.id
                 WHERE 1=1";
 
         $params = [];
@@ -237,26 +238,54 @@ class Activity {
 
     /**
      * ایجاد فعالیت جدید
+     *
+     * نکته: قبلاً created_at همیشه از DEFAULT CURRENT_TIMESTAMP جدول پر می‌شد،
+     * یعنی حتی اگر کاربر توی فرم تاریخ/ساعت دیگری وارد می‌کرد، نادیده گرفته
+     * می‌شد. حالا اگر 'created_at' توی $data داده شده باشد (از فرم)، همان
+     * مقدار ثبت می‌شود؛ در غیر این صورت (مثلاً فراخوانی‌های داخلی سیستم مثل
+     * ثبت خودکار «تسک تکمیل شد») همان لحظه‌ی فعلی استفاده می‌شود.
      */
     public static function create($data) {
         $pdo = getDB();
-        $stmt = $pdo->prepare("INSERT INTO activities (user_id, customer_id, task_id, contact_id, type, description) 
-                               VALUES (?, ?, ?, ?, ?, ?)");
+        $created_at = !empty($data['created_at']) ? $data['created_at'] : date('Y-m-d H:i:s');
+
+        $stmt = $pdo->prepare("INSERT INTO activities (user_id, customer_id, task_id, contact_id, company_id, type, description, created_at) 
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         return $stmt->execute([
             $data['user_id'],
             $data['customer_id'],
             $data['task_id'] ?? null,
             $data['contact_id'] ?? null,
+            $data['company_id'] ?? null,
             $data['type'] ?? 'call',
-            $data['description'] ?? null
+            $data['description'] ?? null,
+            $created_at
         ]);
     }
 
     /**
      * آپدیت فعالیت
+     *
+     * اگر 'created_at' توی $data داده شده باشد (کاربر تاریخ/ساعت فعالیت رو
+     * توی فرم ویرایش عوض کرده)، همون مقدار جدید هم ذخیره می‌شود؛ در غیر
+     * این صورت تاریخ/ساعت قبلی فعالیت دست‌نخورده می‌ماند.
      */
     public static function update($id, $data) {
         $pdo = getDB();
+
+        if (!empty($data['created_at'])) {
+            $stmt = $pdo->prepare("UPDATE activities SET 
+                                   contact_id = ?, type = ?, description = ?, created_at = ?
+                                   WHERE id = ?");
+            return $stmt->execute([
+                $data['contact_id'] ?? null,
+                $data['type'] ?? 'call',
+                $data['description'] ?? null,
+                $data['created_at'],
+                $id
+            ]);
+        }
+
         $stmt = $pdo->prepare("UPDATE activities SET 
                                contact_id = ?, type = ?, description = ?
                                WHERE id = ?");

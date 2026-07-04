@@ -62,6 +62,7 @@
 .cl-table-muted { color:var(--ink-soft); }
 .cl-table-count { background:var(--paper-2); color:var(--ink-soft); padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
 .cl-table-agent { background:#E7F7F3; color:var(--teal-deep); padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+.cl-table-org { background:#F3E8FD; color:var(--purple, #9c27b0); padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
 .cl-tel-link { color:var(--blue); text-decoration:none; direction:ltr; display:inline-flex; align-items:center; gap:4px; position:relative; z-index:1; }
 .cl-tel-link:hover { text-decoration:underline; }
 
@@ -129,6 +130,9 @@
                         <?php if ($is_manager): ?>
                         <th class="sortable" data-type="text">مسئول<span class="sort-arrow">▲</span></th>
                         <?php endif; ?>
+                        <?php if ($is_super): ?>
+                        <th class="sortable" data-type="text">سازمان<span class="sort-arrow">▲</span></th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody>
@@ -147,6 +151,9 @@
                         <td data-sort-value="<?= (int)$c['activity_count'] ?>"><span class="cl-table-count"><?= $c['activity_count'] ?></span></td>
                         <?php if ($is_manager): ?>
                         <td><span class="cl-table-agent"><?= crm_sanitize($c['agent_name']) ?></span></td>
+                        <?php endif; ?>
+                        <?php if ($is_super): ?>
+                        <td><span class="cl-table-org"><?= crm_sanitize($c['company_label'] ?? '—') ?></span></td>
                         <?php endif; ?>
                     </tr>
                     <?php endforeach; ?>
@@ -170,6 +177,7 @@
                 <?php if ($c['phone']): ?><a href="tel:<?= crm_sanitize($c['phone']) ?>" class="cl-tel-link" onclick="event.stopPropagation()">📞 <?= crm_sanitize($c['phone']) ?></a><?php endif; ?>
                 <span class="cl-table-count"><?= $c['activity_count'] ?> فعالیت</span>
                 <?php if ($is_manager): ?><span class="cl-table-agent"><?= crm_sanitize($c['agent_name']) ?></span><?php endif; ?>
+                <?php if ($is_super): ?><span class="cl-table-org"><?= crm_sanitize($c['company_label'] ?? '—') ?></span><?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>

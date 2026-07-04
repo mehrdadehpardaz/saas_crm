@@ -8,6 +8,7 @@ require_once __DIR__ . '/../models/Task.php';
 
 $user = crm_get_current_user();
 $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
+$is_super = ($user['role'] === 'super_admin');
 $action = $_GET['action'] ?? 'list';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 $task_id = isset($_GET['task_id']) ? (int)$_GET['task_id'] : null;
@@ -26,6 +27,18 @@ function crm_build_activity_datetime(): ?string {
     return $_POST['activity_date'] . ' ' . $time . ':00';
 }
 
+/**
+ * مسیر برگشت/ریدایرکت برای صفحات فعالیت.
+ * فعالیت‌ها همیشه زیرمجموعه‌ی یک تسک‌اند، پس هر «بازگشت» یا ریدایرکت بعد از
+ * عملیات باید به صفحه‌ی همون تسک برود، نه به لیست کلی فعالیت‌ها. اگر هیچ
+ * تسکی در دسترس نبود (فعالیت مستقل، فقط به یک مشتری وصل)، به لیست تسک‌ها می‌رویم.
+ */
+function crm_activity_back_url(?int $known_task_id): string {
+    return $known_task_id
+        ? "index.php?page=tasks&action=view&id={$known_task_id}"
+        : "index.php?page=tasks&action=list_all";
+}
+
 // ========== پردازش POST ==========
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     crm_csrf_verify();
@@ -39,9 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (!crm_user_can_access_customer($customer_id_post)) {
             $error = '⛔ شما به این مشتری دسترسی ندارید.';
         } else {
+            // سازمانِ فعالیت همیشه از روی مشتریِ صاحبش گرفته می‌شود
+            $owning_customer = Customer::getById($customer_id_post);
+
             Activity::create([
                 'user_id'     => $user['id'],
                 'customer_id' => $customer_id_post,
+                'company_id'  => $owning_customer['company_id'] ?? null,
                 'task_id'     => $task_id_post ? (int)$task_id_post : null,
                 'contact_id'  => $_POST['contact_id'] ?: null,
                 'type'        => $_POST['type'] ?? 'call',
@@ -63,11 +80,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ]);
                 }
             }
-            
-            $redirect = $task_id_post ? 
-                "index.php?page=tasks&action=view&id=$task_id_post&msg=activity_added" : 
-                "index.php?page=activities&msg=created";
-            
+
+            $redirect_task_id = $task_id_post ? (int)$task_id_post : null;
+            $redirect = $redirect_task_id
+                ? "index.php?page=tasks&action=view&id=$redirect_task_id&msg=activity_added"
+                : crm_activity_back_url(null);
+
             header("Location: $redirect");
             exit;
         }
@@ -86,11 +104,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'created_at'  => $activity_datetime
         ]);
         
-        // بازگشت به همان تسک (اگر در زمینه تسک ویرایش شده) وگرنه به لیست فعالیت‌ها
+        // بازگشت به همان تسک (اگر در زمینه تسک ویرایش شده، وگرنه تسک متعلق به خود فعالیت)
         $redirect_task_id = $task_id ?: ($existing_activity['task_id'] ?? null);
         $redirect = $redirect_task_id
             ? "index.php?page=tasks&action=view&id=$redirect_task_id&msg=activity_updated"
-            : "index.php?page=activities&msg=updated";
+            : crm_activity_back_url(null);
         header("Location: $redirect");
         exit;
     }
@@ -100,9 +118,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         crm_require_activity_access($existing_activity);
 
         Activity::delete($id);
-        $redirect = $task_id ? 
-            "index.php?page=tasks&action=view&id=$task_id" : 
-            "index.php?page=activities&msg=deleted";
+
+        $redirect_task_id = $task_id ?: ($existing_activity['task_id'] ?? null);
+        $redirect = crm_activity_back_url($redirect_task_id ? (int)$redirect_task_id : null);
         header("Location: $redirect");
         exit;
     }
@@ -116,8 +134,11 @@ if ($action === 'add') {
     $task = null;
     
     if ($task_id) {
-        $task = Task::getById($task_id);
-        $customer_id = $task['customer_id'];
+        $candidate_task = Task::getById($task_id);
+        if ($candidate_task && crm_user_can_access_customer($candidate_task['customer_id'])) {
+            $task = $candidate_task;
+            $customer_id = $task['customer_id'];
+        }
     }
     
     $customers_list = Activity::getCustomersForDropdown($user['id'], $is_manager);
@@ -138,6 +159,20 @@ elseif ($action === 'edit' && $id) {
     crm_require_activity_access($activity);
     $customers_list = Activity::getCustomersForDropdown($user['id'], $is_manager);
     $contacts_list = Customer::getContacts($activity['customer_id']);
+
+    // اگر ویرایش از داخل صفحه‌ی یک تسک باز شده (؟task_id=..) یا خودِ فعالیت
+    // از قبل به یک تسک وصل است، همون تسک رو برای نمایش جعبه‌ی اطلاعاتی بالای
+    // فرم لود می‌کنیم — این همون متغیری‌ست که نبودش باعث Undefined variable می‌شد.
+    $task = null;
+    $effective_task_id = $task_id ?: ($activity['task_id'] ?? null);
+    if ($effective_task_id) {
+        $candidate_task = Task::getById((int)$effective_task_id);
+        if ($candidate_task && crm_user_can_access_customer($candidate_task['customer_id'])) {
+            $task = $candidate_task;
+            $task_id = $effective_task_id; // برای هماهنگی لینک بازگشت/فرم
+        }
+    }
+
     include __DIR__ . '/../Views/activities/form.php';
 }
 else {

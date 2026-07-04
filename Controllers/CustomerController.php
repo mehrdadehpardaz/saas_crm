@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $data = [
                 'user_id' => $user['id'],
+                'company_id' => $user['company_id'] ?? null,
                 'industry_id' => !empty($industry_id) ? $industry_id : null,
                 'company_name' => $company_name,
                 'contact_person' => $contact_person,
