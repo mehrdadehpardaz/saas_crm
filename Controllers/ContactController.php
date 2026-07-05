@@ -42,9 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $owning_customer = Customer::getById($customer_id_post);
             $company_id = $owning_customer['company_id'] ?? null;
             
-            $stmt = $pdo->prepare("INSERT INTO contacts (customer_id, company_id, full_name, position, phone, email, is_primary, status) 
-                                   VALUES (?, ?, ?, ?, ?, ?, ?, 'active')");
-            $stmt->execute([$customer_id_post, $company_id, $full_name, $position, $phone, $email, $is_primary]);
+            $stmt = $pdo->prepare("INSERT INTO contacts (customer_id, user_id, company_id, full_name, position, phone, email, is_primary, status) 
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')");
+            $stmt->execute([$customer_id_post, $user['id'], $company_id, $full_name, $position, $phone, $email, $is_primary]);
             
             header('Location: index.php?page=customers&action=view&id=' . $customer_id_post . '&msg=contact_added');
             exit;
@@ -169,22 +169,33 @@ elseif ($action === 'edit' && $id) {
 elseif ($action === 'list' || $action === 'index') {
     $pdo = getDB();
 
+    // نکته: owner_name/owner_id حالا از روی خودِ سازنده‌ی مخاطب (co.user_id)
+    // گرفته می‌شه، نه صاحبِ مشتری (cu.user_id) — چون ممکنه یک مدیر یا
+    // مدیرفروش، مخاطبی رو برای مشتریِ یک کارشناسِ دیگه ثبت کرده باشه.
+    // برای تشخیص محدوده‌ی دسترسی (شرکت/زیرمجموعه) هنوز از صاحبِ مشتری
+    // (cu.user_id) به اسم owner_scope_id استفاده می‌کنیم.
     if ($is_super) {
         $contacts = $pdo->query("
-            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid, u.full_name AS owner_name, cu.user_id AS owner_id, comp.name AS company_label
+            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid,
+                   creator.full_name AS owner_name, co.user_id AS owner_id,
+                   cu.user_id AS owner_scope_id, comp.name AS company_label
             FROM contacts co
             LEFT JOIN customers cu ON co.customer_id = cu.id
             LEFT JOIN users u ON cu.user_id = u.id
+            LEFT JOIN users creator ON co.user_id = creator.id
             LEFT JOIN companies comp ON co.company_id = comp.id
             WHERE co.status = 'active'
             ORDER BY co.id DESC
         ")->fetchAll();
     } elseif ($is_admin) {
         $stmt = $pdo->prepare("
-            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid, u.full_name AS owner_name, cu.user_id AS owner_id, comp.name AS company_label
+            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid,
+                   creator.full_name AS owner_name, co.user_id AS owner_id,
+                   cu.user_id AS owner_scope_id, comp.name AS company_label
             FROM contacts co
             LEFT JOIN customers cu ON co.customer_id = cu.id
             LEFT JOIN users u ON cu.user_id = u.id
+            LEFT JOIN users creator ON co.user_id = creator.id
             LEFT JOIN companies comp ON co.company_id = comp.id
             WHERE co.status = 'active' AND u.company_name = ?
             ORDER BY co.id DESC
@@ -193,10 +204,13 @@ elseif ($action === 'list' || $action === 'index') {
         $contacts = $stmt->fetchAll();
     } else {
         $stmt = $pdo->prepare("
-            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid, u.full_name AS owner_name, cu.user_id AS owner_id, comp.name AS company_label
+            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid,
+                   creator.full_name AS owner_name, co.user_id AS owner_id,
+                   cu.user_id AS owner_scope_id, comp.name AS company_label
             FROM contacts co
             LEFT JOIN customers cu ON co.customer_id = cu.id
             LEFT JOIN users u ON cu.user_id = u.id
+            LEFT JOIN users creator ON co.user_id = creator.id
             LEFT JOIN companies comp ON co.company_id = comp.id
             WHERE co.status = 'active' AND cu.user_id = ?
             ORDER BY co.id DESC
@@ -238,7 +252,7 @@ elseif ($action === 'list' || $action === 'index') {
         $filter_customer_id = '';
     }
 
-    // ── اعمال فیلتر ثبت‌کننده (مالک مشتری) ──
+    // ── اعمال فیلتر ثبت‌کننده (سازنده‌ی واقعی مخاطب) ──
     $filter_owner_id = $_GET['owner_id'] ?? '';
     if ($filter_owner_id !== '') {
         $contacts = array_filter($contacts, function($c) use ($filter_owner_id) {

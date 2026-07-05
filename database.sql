@@ -205,3 +205,15 @@ ALTER TABLE `activities` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `custome
 
 ALTER TABLE `activities`
   ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;
+
+  -- migration_contacts_user_id.sql
+-- اضافه کردن user_id به جدول contacts، تا مشخص باشه دقیقاً کدوم کاربر
+-- این مخاطب رو ساخته — جدا از customer_id (مشتری صاحب مخاطب) و
+-- company_id (سازمان). تا الان تنها راه حدس زدن «سازنده»، صاحبِ خودِ
+-- مشتری (customers.user_id) بود که همیشه درست نیست (مثلاً وقتی مدیر یا
+-- مدیرفروش یک مخاطب رو برای مشتریِ یک کارشناسِ دیگه ثبت می‌کنه).
+
+ALTER TABLE `contacts` ADD COLUMN `user_id` INT DEFAULT NULL AFTER `customer_id`;
+
+ALTER TABLE `contacts`
+  ADD FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL;

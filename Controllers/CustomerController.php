@@ -78,7 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'contact_phone' => $contact_phone,
                 'phone' => $phone,
                 'email' => $email,
-                'notes' => $notes
+                'notes' => $notes,
+                'acting_user_id' => $user['id']
             ];
             
             if (Customer::update($id, $data)) {

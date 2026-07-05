@@ -110,9 +110,11 @@ function _backup_export_excel(PDO $pdo, array $user, bool $is_super): void
     // 3. مخاطبین
     $sheets['مخاطبین'] = $pdo->query(
         "SELECT co.id, co.full_name, co.position, co.phone, co.email,
-                co.is_primary, co.status, cu.company_name AS customer, co.created_at
+                co.is_primary, co.status, cu.company_name AS customer,
+                creator.full_name AS created_by, co.created_at
         FROM contacts co
         LEFT JOIN customers cu ON co.customer_id = cu.id
+        LEFT JOIN users creator ON co.user_id = creator.id
         WHERE cu.user_id IN ($uid_list) ORDER BY co.id"
     )->fetchAll(PDO::FETCH_ASSOC);
 
