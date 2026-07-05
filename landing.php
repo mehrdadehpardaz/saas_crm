@@ -516,7 +516,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
   <div class="container nav-inner">
     <a href="#" class="nav-logo">
       <span class="nav-logo-mark">پ</span>
-      پیگیر
+      پیگیریو
     </a>
     <nav class="nav-links">
       <a href="#flow">چطور کار می‌کنه</a>

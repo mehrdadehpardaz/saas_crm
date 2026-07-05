@@ -434,7 +434,7 @@ $nav_groups[] = [
 <header class="crm-topbar">
     <a href="index.php?page=dashboard" class="crm-topbar-logo">
         <span class="crm-logo-mark" aria-hidden="true">پ</span>
-        پیگیر
+        پیگیریو
     </a>
 </header>
 
