@@ -383,6 +383,17 @@ function _xlsx_styles(string $hbg, string $hfg, string $alt): string
 }
 
 
+/** بررسی می‌کند آیا یک تابع صراحتاً در php.ini (disable_functions) غیرفعال شده */
+function _backup_is_disabled(string $func_name): bool
+{
+    $disabled = ini_get('disable_functions');
+    if (!$disabled) {
+        return false;
+    }
+    $list = array_map('trim', explode(',', $disabled));
+    return in_array($func_name, $list, true);
+}
+
 // ── SQL Dump ──────────────────────────────────────────────────
 function _backup_export_sql(): void
 {
@@ -397,20 +408,42 @@ function _backup_export_sql(): void
     $tmp  = tempnam(sys_get_temp_dir(), 'crm_sql_') . '.sql';
     $dl   = 'crm_backup_' . date('Ymd_His') . '.sql';
 
-    $cmd  = sprintf(
-        'mysqldump --single-transaction --routines --triggers -h %s -u %s %s %s > %s 2>&1',
-        escapeshellarg($host),
-        escapeshellarg($usr),
-        $pass !== '' ? '-p' . escapeshellarg($pass) : '',
-        escapeshellarg($name),
-        escapeshellarg($tmp)
-    );
+    // بیشتر هاست‌های اشتراکی exec/shell_exec/system/proc_open رو از طریق
+    // disable_functions غیرفعال می‌کنن. صدا زدن یک تابع غیرفعال، PHP رو با
+    // یک Fatal Error متوقف می‌کنه (نه یک warning قابل مدیریت) — که چون
+    // display_errors توی production خاموشه، دقیقاً همون «صفحه سفید + 500»
+    // رو نتیجه می‌ده. پس قبل از استفاده از exec باید مطمئن بشیم اصلاً
+    // فعاله، وگرنه مستقیم بریم سراغ dump با PDO (بدون نیاز به mysqldump).
+    $mysqldump_ok = false;
 
-    exec($cmd, $out, $ret);
+    if (function_exists('exec') && !_backup_is_disabled('exec')) {
+        $cmd = sprintf(
+            'mysqldump --single-transaction --routines --triggers -h %s -u %s %s %s > %s 2>&1',
+            escapeshellarg($host),
+            escapeshellarg($usr),
+            $pass !== '' ? '-p' . escapeshellarg($pass) : '',
+            escapeshellarg($name),
+            escapeshellarg($tmp)
+        );
 
-    if ($ret !== 0 || !file_exists($tmp) || filesize($tmp) < 10) {
-        // اگر mysqldump نبود از PDO dump کنیم
+        try {
+            exec($cmd, $out, $ret);
+            $mysqldump_ok = ($ret === 0 && file_exists($tmp) && filesize($tmp) >= 10);
+        } catch (\Throwable $e) {
+            $mysqldump_ok = false;
+        }
+    }
+
+    if (!$mysqldump_ok) {
+        // mysqldump در دسترس نبود (یا اجرا نشد) — از PDO دامپ می‌گیریم.
+        // این مسیر روی همه‌ی هاست‌ها (حتی وقتی exec غیرفعاله) کار می‌کنه.
         _backup_pdo_dump($tmp);
+    }
+
+    if (!file_exists($tmp) || filesize($tmp) < 1) {
+        while (ob_get_level() > 0) { ob_end_clean(); }
+        http_response_code(500);
+        die('خطا در ساخت فایل پشتیبان. لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.');
     }
 
     while (ob_get_level() > 0) { ob_end_clean(); }

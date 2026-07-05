@@ -10,9 +10,9 @@ date_default_timezone_set('Asia/Tehran');
 
 // ── مشخصات اتصال به دیتابیس — هاست اشتراکی ──
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'peygirio_crm_saas');
-define('DB_USER', 'peygirio_MrAqda');
-define('DB_PASS', 'Tandis1376@');
+define('DB_NAME', 'crm_saas');
+define('DB_USER', 'root');
+define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 
 function getDB() {

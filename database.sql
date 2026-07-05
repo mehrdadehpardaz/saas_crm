@@ -170,17 +170,10 @@ CREATE TABLE IF NOT EXISTS `companies` (
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- ── ۲) پر کردن جدول شرکت‌ها از روی users.company_name فعلی ──
-INSERT IGNORE INTO `companies` (`name`)
-SELECT DISTINCT `company_name` FROM `users`
-WHERE `company_name` IS NOT NULL AND `company_name` <> '';
 
 -- ── ۳) اضافه کردن company_id به users و پر کردنش ──
 ALTER TABLE `users` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `company_name`;
 
-UPDATE `users` u
-JOIN `companies` c ON c.`name` = u.`company_name`
-SET u.`company_id` = c.`id`;
 
 ALTER TABLE `users`
   ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;
@@ -188,9 +181,6 @@ ALTER TABLE `users`
 -- ── ۴) customers: company_id از روی صاحب مشتری (user_id) ──
 ALTER TABLE `customers` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `user_id`;
 
-UPDATE `customers` cu
-JOIN `users` u ON u.`id` = cu.`user_id`
-SET cu.`company_id` = u.`company_id`;
 
 ALTER TABLE `customers`
   ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;
@@ -198,9 +188,6 @@ ALTER TABLE `customers`
 -- ── ۵) contacts: company_id از روی مشتریِ صاحبِ مخاطب ──
 ALTER TABLE `contacts` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `customer_id`;
 
-UPDATE `contacts` co
-JOIN `customers` cu ON cu.`id` = co.`customer_id`
-SET co.`company_id` = cu.`company_id`;
 
 ALTER TABLE `contacts`
   ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;
@@ -208,9 +195,6 @@ ALTER TABLE `contacts`
 -- ── ۶) tasks: company_id از روی مشتریِ همان تسک ──
 ALTER TABLE `tasks` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `customer_id`;
 
-UPDATE `tasks` t
-JOIN `customers` cu ON cu.`id` = t.`customer_id`
-SET t.`company_id` = cu.`company_id`;
 
 ALTER TABLE `tasks`
   ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;
@@ -218,9 +202,6 @@ ALTER TABLE `tasks`
 -- ── ۷) activities: company_id از روی مشتریِ همان فعالیت ──
 ALTER TABLE `activities` ADD COLUMN `company_id` INT DEFAULT NULL AFTER `customer_id`;
 
-UPDATE `activities` a
-JOIN `customers` cu ON cu.`id` = a.`customer_id`
-SET a.`company_id` = cu.`company_id`;
 
 ALTER TABLE `activities`
   ADD FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON DELETE SET NULL;

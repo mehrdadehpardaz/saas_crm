@@ -238,8 +238,17 @@
             </div>
         </div>
 
+        <!-- نکته‌ی فنی: فیلد CSRF باید داخل خودِ این <form> باشد، نه داخل
+             مودال تأیید پایین صفحه. مودال از نظر ساختار HTML یک عنصر
+             کاملاً جدا و بیرون از این فرم است؛ وقتی جاوااسکریپت با
+             .submit() این فرم را ارسال می‌کند، فقط فیلدهایی که واقعاً
+             داخل همین تگ <form> باشند به سرور فرستاده می‌شوند. قبلاً
+             فیلد CSRF داخل مودال بود، پس اصلاً ارسال نمی‌شد و سرور با
+             «درخواست نامعتبر است» (403) رد می‌کرد. -->
         <form method="POST" action="index.php?page=backup&action=restore"
               enctype="multipart/form-data" id="restore-form">
+
+            <?php include __DIR__ . '/../../includes/csrf_field.php'; ?>
 
             <!-- Upload zone -->
             <div class="bk-upload-zone" id="upload-zone">
@@ -276,7 +285,6 @@
         <p>مطمئن هستید؟ تمام داده‌های فعلی با محتوای فایل SQL جایگزین می‌شوند.<br>این عملیات <strong>قابل برگشت نیست</strong>.</p>
         <div class="bk-modal-btns">
             <button class="bk-btn bk-btn-outline" onclick="hideRestoreConfirm()">انصراف</button>
-            <?php include __DIR__ . '/../../includes/csrf_field.php'; ?>
             <button class="bk-btn bk-btn-danger" onclick="submitRestore()">بله، بازگردانی کن</button>
         </div>
     </div>
