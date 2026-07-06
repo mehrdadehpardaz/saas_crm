@@ -397,7 +397,7 @@ $nav_groups = [
             ['page' => 'dashboard',  'icon' => '🏠', 'label' => 'داشبورد'],
             ['page' => 'customers',  'icon' => '🏢', 'label' => 'مشتریان'],
             ['page' => 'contacts',   'icon' => '👤', 'label' => 'مخاطبین'],
-            ['page' => 'tasks',      'icon' => '✅', 'label' => 'تسک‌ها'],
+            ['page' => 'tasks',      'icon' => '✅', 'label' => 'فرصت‌ها'],
         ],
     ],
 ];
@@ -521,7 +521,7 @@ $nav_groups[] = [
     </a>
     <a href="index.php?page=tasks" class="crm-tab-item <?= $page==='tasks'?'active':'' ?>" <?= $page==='tasks' ? 'aria-current="page"' : '' ?>>
         <span class="crm-tab-icon" aria-hidden="true">✅</span>
-        <span class="crm-tab-label">تسک‌ها</span>
+        <span class="crm-tab-label">فرصت ها</span>
     </a>
     <button type="button" class="crm-tab-item <?= $is_on_secondary_page ? 'active' : '' ?>" id="crm-more-btn" aria-haspopup="true" aria-expanded="false">
         <span class="crm-tab-icon" aria-hidden="true">⋯</span>

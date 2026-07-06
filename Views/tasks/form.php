@@ -81,7 +81,7 @@ $selected_customer_id = $task['customer_id'] ?? $customer_id ?? null;
 <div class="tf-wrap">
 
 <div class="tf-header">
-    <h2><?= $is_edit ? '✏️ ویرایش تسک' : '➕ تسک جدید' ?></h2>
+    <h2><?= $is_edit ? '✏️ ویرایش فرصت' : '➕ فرصت جدید' ?></h2>
     <button type="button" onclick="history.back()" class="tf-btn-back">🔙 بازگشت</button>
 </div>
 
@@ -111,7 +111,7 @@ $selected_customer_id = $task['customer_id'] ?? $customer_id ?? null;
     </div>
 
     <div class="tf-group">
-        <label>📋 عنوان تسک *</label>
+        <label>📋 عنوان فرصت *</label>
         <input type="text" name="title" required
                placeholder="مثال: خرید دیزل ژنراتور"
                value="<?= crm_sanitize($task['title'] ?? $_POST['title'] ?? '') ?>">
@@ -148,7 +148,7 @@ $selected_customer_id = $task['customer_id'] ?? $customer_id ?? null;
 
     <div class="tf-actions">
         <?php include __DIR__ . '/../../includes/csrf_field.php'; ?>
-        <button type="submit" class="tf-btn-submit"><?= $is_edit ? '💾 بروزرسانی' : '✅ ایجاد تسک' ?></button>
+        <button type="submit" class="tf-btn-submit"><?= $is_edit ? '💾 بروزرسانی' : '✅ ایجاد فرصت' ?></button>
         <button type="button" onclick="history.back()" class="tf-btn-cancel">انصراف</button>
     </div>
 </form>

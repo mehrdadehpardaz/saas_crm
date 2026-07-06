@@ -75,13 +75,13 @@
 <div class="tla-wrap">
 
 <div class="tla-header">
-    <h2>همه تسک‌ها</h2>
-    <a href="index.php?page=tasks&action=add" class="tla-btn-add">+ تسک جدید</a>
+    <h2>همه فرصت‌ها</h2>
+    <a href="index.php?page=tasks&action=add" class="tla-btn-add">+ فرصت جدید</a>
 </div>
 
 <?php if (($_GET['filter_status'] ?? '') === 'overdue'): ?>
 <div style="padding:11px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;background:#FCE8E6;color:var(--danger-deep);border:1px solid #F5C6CB">
-    فقط تسک‌های فعالی که از تاریخ پیگیری‌شان گذشته نشان داده می‌شوند.
+    فقط فرصت‌های فعالی که از تاریخ پیگیری‌شان گذشته نشان داده می‌شوند.
 </div>
 <?php endif; ?>
 
@@ -149,7 +149,7 @@
 
 <?php if (empty($all_tasks)): ?>
     <div class="tla-empty">
-        <p>هیچ تسکی یافت نشد.</p>
+        <p>هیچ فرصتی یافت نشد.</p>
     </div>
 <?php else:
     $active_count    = count(array_filter($all_tasks, fn($t) => $t['status'] === 'active'));
@@ -164,7 +164,7 @@
         <thead>
             <tr>
                 <th style="width:32px; text-align:center;"><span class="sr-only">اولویت</span>●</th>
-                <th>عنوان تسک</th>
+                <th>عنوان فرصت</th>
                 <th>مشتری</th>
                 <th>مالک</th>
                 <?php if ($is_super): ?>
@@ -237,7 +237,7 @@
 </div>
 
 <div class="tla-footer">
-    <span>کل: <strong><?= count($all_tasks) ?></strong> تسک</span>
+    <span>کل: <strong><?= count($all_tasks) ?></strong> فرصت</span>
     <div class="tla-summary">
         <span class="tla-summary-item"><span class="tla-dot" style="background:var(--teal)" aria-hidden="true"></span><?= $active_count ?> فعال</span>
         <span class="tla-summary-item"><span class="tla-dot" style="background:var(--blue)" aria-hidden="true"></span><?= $completed_count ?> تکمیل</span>

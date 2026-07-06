@@ -118,15 +118,15 @@
 <div class="tv-wrap">
 
 <?php if ($message === 'created'): ?>
-    <div class="tv-alert tv-alert-success">تسک با موفقیت ایجاد شد.</div>
+    <div class="tv-alert tv-alert-success">فرصت با موفقیت ایجاد شد.</div>
 <?php elseif ($message === 'completed'): ?>
-    <div class="tv-alert tv-alert-success">تسک تکمیل شد.</div>
+    <div class="tv-alert tv-alert-success">فرصت تکمیل شد.</div>
 <?php elseif ($message === 'sold'): ?>
-    <div class="tv-alert tv-alert-success">تسک با موفقیت منجر به فروش ثبت شد.</div>
+    <div class="tv-alert tv-alert-success">فرصت با موفقیت منجر به فروش ثبت شد.</div>
 <?php elseif ($message === 'cancelled'): ?>
-    <div class="tv-alert tv-alert-warning">تسک کنسل شد.</div>
+    <div class="tv-alert tv-alert-warning">فرصت کنسل شد.</div>
 <?php elseif ($message === 'assigned'): ?>
-    <div class="tv-alert tv-alert-success">تسک با موفقیت به کاربر جدید منتقل شد.</div>
+    <div class="tv-alert tv-alert-success">فرصت با موفقیت به کاربر جدید منتقل شد.</div>
 <?php elseif ($message === 'activity_added'): ?>
     <div class="tv-alert tv-alert-success">فعالیت ثبت شد.</div>
 <?php elseif ($message === 'activity_updated'): ?>
@@ -150,7 +150,7 @@
         <a href="index.php?page=tasks&action=assign&id=<?= $task['id'] ?>" class="tv-btn tv-btn-transfer">انتقال</a>
         <?php endif; ?>
         <?php endif; ?>
-        <a href="index.php?page=tasks&action=edit&id=<?= $task['id'] ?>" class="tv-btn tv-btn-edit" aria-label="ویرایش تسک">✏️</a>
+        <a href="index.php?page=tasks&action=edit&id=<?= $task['id'] ?>" class="tv-btn tv-btn-edit" aria-label="ویرایش فرصت">✏️</a>
         <a href="index.php?page=activities&action=add&task_id=<?= $task['id'] ?>&customer_id=<?= $task['customer_id'] ?>" class="tv-btn tv-btn-activity">+ فعالیت</a>
     </div>
 </div>
@@ -191,13 +191,13 @@
 <!-- جدول فعالیت‌ها — جدیدترین بالا، قدیمی‌ترین پایین -->
 <div class="tv-activity-card">
     <div class="tv-activity-hd">
-        <h3>فعالیت‌های این تسک</h3>
+        <h3>فعالیت‌های این فرصت</h3>
         <span class="tv-activity-count"><?= count($activities) ?></span>
     </div>
 
     <?php if (empty($activities)): ?>
         <div class="tv-empty">
-            <p>هنوز فعالیتی برای این تسک ثبت نشده.</p>
+            <p>هنوز فعالیتی برای این فرصت ثبت نشده.</p>
             <a href="index.php?page=activities&action=add&task_id=<?= $task['id'] ?>&customer_id=<?= $task['customer_id'] ?>">ثبت اولین فعالیت</a>
         </div>
     <?php else: ?>

@@ -17,7 +17,7 @@ $open_login_modal = !empty($login_error);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>راهنمای کامل پیگیر — از ثبت‌نام تا گزارش‌گیری</title>
-<meta name="description" content="راهنمای قدم‌به‌قدم پیگیر: چطور مشتری بسازی، تسک تعریف کنی، فعالیت ثبت کنی، تیم بسازی و گزارش بگیری.">
+<meta name="description" content="راهنمای قدم‌به‌قدم پیگیر: چطور مشتری بسازی، فرصت تعریف کنی، فعالیت ثبت کنی، تیم بسازی و گزارش بگیری.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://paygiro.ir/guide.php">
 
@@ -221,7 +221,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offs
     </a>
     <nav class="nav-links">
       <a href="#start">شروع</a>
-      <a href="#flow">مشتری→تسک→فعالیت</a>
+      <a href="#flow">مشتری→فرصت→فعالیت</a>
       <a href="#team">تیم و دسترسی</a>
       <a href="#reports">گزارش‌گیری</a>
       <a href="#backup">پشتیبان‌گیری</a>
@@ -246,7 +246,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offs
     <div class="gd-checklist reveal">
       <a href="#start" class="gd-check-item"><span class="gd-check-num">۱</span>ثبت‌نام کن</a>
       <a href="#flow" class="gd-check-item"><span class="gd-check-num">۲</span>مشتری بساز</a>
-      <a href="#flow" class="gd-check-item"><span class="gd-check-num">۳</span>تسک تعریف کن</a>
+      <a href="#flow" class="gd-check-item"><span class="gd-check-num">۳</span>فرصت تعریف کن</a>
       <a href="#flow" class="gd-check-item"><span class="gd-check-num">۴</span>فعالیت ثبت کن</a>
       <a href="#team" class="gd-check-item"><span class="gd-check-num">۵</span>تیم بساز</a>
       <a href="#reports" class="gd-check-item"><span class="gd-check-num">۶</span>گزارش بگیر</a>
@@ -268,12 +268,12 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offs
   </div>
 </section>
 
-<!-- FLOW: مشتری → تسک → فعالیت -->
+<!-- FLOW: مشتری → فرصت → فعالیت -->
 <section class="section anchor-offset" id="flow" style="background:var(--paper-2)">
   <div class="container">
     <div class="section-head reveal">
       <div class="section-eyebrow">منطق اصلی کار</div>
-      <h2 class="section-title">مشتری → تسک → فعالیت</h2>
+      <h2 class="section-title">مشتری → فرصت → فعالیت</h2>
       <p class="section-desc">هر فروش موفق همین سه قدم رو داره. پیگیر همین ترتیب رو توی رابط کاربری هم اجرا می‌کنه، تا هیچ‌وقت گیج نشی که «الان باید چیکار کنم».</p>
     </div>
 
@@ -292,8 +292,8 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offs
       <div class="flow-card step-2">
         <div class="flow-tag">قدم دوم</div>
         <div class="flow-icon" aria-hidden="true">✅</div>
-        <h3>براش یک تسک بذار</h3>
-        <p>از داخل صفحه مشتری → «تسک جدید». تسک یعنی یک هدف مشخص که دنبالش می‌کنی — نه یک کار روزمره. برای هر مشتری می‌تونی چند تسک همزمان داشته باشی.</p>
+        <h3>براش یک فرصت بذار</h3>
+        <p>از داخل صفحه مشتری → «فرصت جدید». فرصت یعنی یک هدف مشخص که دنبالش می‌کنی — نه یک کار روزمره. برای هر مشتری می‌تونی چند فرصت همزمان داشته باشی.</p>
         <div class="flow-example"><b>مثال:</b> «فروش دیزل ژنراتور ۵۰۰ کاوا» — پیگیری بعدی: سه‌شنبه</div>
       </div>
 
@@ -304,14 +304,14 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offs
         <div class="flow-tag">قدم سوم</div>
         <div class="flow-icon" aria-hidden="true">📞</div>
         <h3>فعالیت‌ها رو زیرش ثبت کن</h3>
-        <p>از داخل صفحه تسک → «افزودن فعالیت». هر تماس، جلسه، ایمیل یا یادداشت رو زیر همون تسک بنویس — تا وقتی تسک به نتیجه برسه.</p>
+        <p>از داخل صفحه فرصت → «افزودن فعالیت». هر تماس، جلسه، ایمیل یا یادداشت رو زیر همون فرصت بنویس — تا وقتی فرصت به نتیجه برسه.</p>
         <div class="flow-example"><b>مثال:</b> «تماس گرفتم، قیمت رو خواستن» — نوع: تماس</div>
       </div>
     </div>
 
     <div class="flow-note reveal">
-      💡 <b>چرا این ترتیب مهمه؟</b> بدون مشتری، تسکی وجود نداره. بدون تسک، فعالیت‌هات پراکنده می‌مونن و معلوم نیست به کجا ختم میشن.
-      وقتی تسک با نتیجه «✅ تکمیل شد»، «💰 منجر به فروش شد» یا «❌ کنسل شد» بسته میشه، از لیست تسک‌های فعال (و از داشبورد) خارج می‌شه — ولی همه فعالیت‌های زیرش برای گزارش‌گیری باقی می‌مونه.
+      💡 <b>چرا این ترتیب مهمه؟</b> بدون مشتری، فرصتی وجود نداره. بدون فرصت، فعالیت‌هات پراکنده می‌مونن و معلوم نیست به کجا ختم میشن.
+      وقتی فرصت با نتیجه «✅ تکمیل شد»، «💰 منجر به فروش شد» یا «❌ کنسل شد» بسته میشه، از لیست فرصت‌های فعال (و از داشبورد) خارج می‌شه — ولی همه فعالیت‌های زیرش برای گزارش‌گیری باقی می‌مونه.
     </div>
   </div>
 </section>
@@ -411,7 +411,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offs
           <li>مدیر همه‌چیز شرکت رو می‌بینه، مدیر فروش فقط تیم خودش، کارشناس فقط کار خودش</li>
           <li>هر زمان از پنل «کاربران» می‌تونی نفر جدید اضافه یا غیرفعال کنی</li>
           <li>سقف کاربران فعال با پلن شما هماهنگه — کاربر اضافه، هزینه اضافه</li>
-          <li>وقتی کاربری غیرفعال میشه، مشتری‌ها و تسک‌هاش پیش شرکت می‌مونن، فقط خودش دیگه وارد نمی‌شه</li>
+          <li>وقتی کاربری غیرفعال میشه، مشتری‌ها و فرصت‌هاش پیش شرکت می‌مونن، فقط خودش دیگه وارد نمی‌شه</li>
         </ul>
       </div>
 
@@ -459,7 +459,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offs
         <ul class="tr-list">
           <li>تعداد تماس، جلسه، ایمیل و یادداشت خودت</li>
           <li>روند روزانه فعالیت با فیلتر بازه تاریخ</li>
-          <li>نرخ تکمیل تسک‌ها و تعداد فروش‌های موفق</li>
+          <li>نرخ تکمیل فرصت‌ها و تعداد فروش‌های موفق</li>
         </ul>
       </div>
 
@@ -515,7 +515,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offs
       <div class="bk-card">
         <div class="bk-card-icon" style="background:#E7F7F3">📊</div>
         <h3>خروجی اکسل</h3>
-        <p>یک فایل با ۶ شیت جدا: کاربران، مشتریان، مخاطبین، فعالیت‌ها، تسک‌ها و صنایع. محدود به داده‌های شرکت خودت — برای آرشیو یا ارائه به بیرون از سیستم.</p>
+        <p>یک فایل با ۶ شیت جدا: کاربران، مشتریان، مخاطبین، فعالیت‌ها، فرصت‌ها و صنایع. محدود به داده‌های شرکت خودت — برای آرشیو یا ارائه به بیرون از سیستم.</p>
       </div>
       <div class="bk-card">
         <div class="bk-card-icon" style="background:#E8F0FE">🗄️</div>
@@ -553,7 +553,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offs
     <div class="foot-links">
         <a href="landing.php">صفحه اصلی</a>
         <a href="#start">شروع</a>
-        <a href="#flow">مشتری→تسک→فعالیت</a>
+        <a href="#flow">مشتری→فرصت→فعالیت</a>
         <a href="#team">تیم</a>
         <a href="#reports">گزارش</a>
         <a href="#backup">پشتیبان‌گیری</a>
