@@ -12,9 +12,9 @@ $activity_time_default = !empty($activity['created_at'])
     ? date('H:i', strtotime($activity['created_at']))
     : date('H:i');
 
-// مسیر «بازگشت» / «انصراف»: فعالیت‌ها همیشه زیرمجموعه‌ی یک فرصت‌اند،
-// پس همیشه به صفحه‌ی همون فرصت برمی‌گردیم؛ اگر هیچ فرصتی در دسترس نبود
-// (فعالیت مستقیماً به یک مشتری وصله، بدون فرصت)، به لیست فرصت‌ها می‌رویم.
+// مسیر «بازگشت» / «انصراف»: فعالیت‌ها همیشه زیرمجموعه‌ی یک فرصت فروش‌اند،
+// پس همیشه به صفحه‌ی همون فرصت فروش برمی‌گردیم؛ اگر هیچ فرصت فروشی در دسترس نبود
+// (فعالیت مستقیماً به یک مشتری وصله، بدون فرصت فروش)، به لیست فرصت‌های فروش می‌رویم.
 $back_task_id = $task['id'] ?? ($activity['task_id'] ?? null);
 $back_url = $back_task_id
     ? 'index.php?page=tasks&action=view&id=' . $back_task_id
@@ -131,7 +131,7 @@ $back_url = $back_task_id
     <input type="hidden" name="customer_id" value="<?= $task['customer_id'] ?>">
 
     <div class="af-group">
-        <label>📋 فرصت</label>
+        <label>📋 فرصت فروش</label>
         <input type="text" value="<?= crm_sanitize($task['title']) ?>" disabled>
     </div>
 
@@ -140,10 +140,10 @@ $back_url = $back_task_id
         <input type="text" value="<?= crm_sanitize($task['company_name']) ?>" disabled>
     </div>
 
-    <!-- فقط جهت اطلاع — پیگیری فعلی این فرصت. برای تغییرش از فیلدهای
+    <!-- فقط جهت اطلاع — پیگیری فعلی این فرصت فروش. برای تغییرش از فیلدهای
          «تاریخ/موضوع پیگیری بعدی» پایین همین فرم استفاده کن. -->
     <div class="af-task-box">
-        <h4>⏰ پیگیری فعلی این فرصت</h4>
+        <h4>⏰ پیگیری فعلی این فرصت فروش</h4>
         <input type="hidden" name="update_task_followup" value="1">
         <input type="hidden" name="task_title" value="<?= crm_sanitize($task['title']) ?>">
 
@@ -160,7 +160,7 @@ $back_url = $back_task_id
                 </div>
                 <?php endif; ?>
             <?php else: ?>
-                <div class="af-ro-empty">پیگیری بعدی‌ای برای این فرصت تعیین نشده.</div>
+                <div class="af-ro-empty">پیگیری بعدی‌ای برای این فرصت فروش تعیین نشده.</div>
             <?php endif; ?>
         </div>
         <small class="af-hint">برای تغییرش، از فیلدهای «پیگیری بعدی» پایین فرم استفاده کن.</small>

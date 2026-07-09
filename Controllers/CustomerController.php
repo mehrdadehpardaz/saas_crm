@@ -139,11 +139,8 @@ elseif ($action === 'view' && $id) {
         exit;
     }
     
-    // چک دسترسی: آیا کاربر جزو شرکت صاحب مشتری هست؟
-    $root_id = crm_get_company_root($user['id']);
-    $member_ids = crm_get_company_members($root_id);
-    
-    if (!in_array($customer['user_id'], $member_ids) && $customer['user_id'] != $user['id']) {
+    // چک دسترسی: آیا کاربر company_id یکسانی با این مشتری داره؟ (قانون ۱)
+    if (!crm_user_can_access_customer($id)) {
         echo '<div class="alert alert-error">⛔ شما به این مشتری دسترسی ندارید.</div>';
         echo '<a href="index.php?page=customers" class="btn">بازگشت</a>';
         exit;

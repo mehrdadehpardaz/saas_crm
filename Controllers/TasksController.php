@@ -69,8 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // حذف تسک
+    // حذف تسک — طبق قانون، حذف فقط برای Admin (و سوپر ادمین) مجازه
     if ($action === 'delete' && $id) {
+        if (!$is_admin) {
+            http_response_code(403);
+            die('<div class="alert alert-error">⛔ حذف فقط برای مدیران امکان‌پذیر است.</div>');
+        }
         $task_to_delete = Task::getById($id);
         crm_require_task_access($task_to_delete);
 
@@ -188,8 +192,10 @@ if ($action === 'list_all') {
     
     // فیلتر دسترسی / مالک
     // اگر فیلتر «مالک» انتخاب شده، فقط همان یک کاربر؛ در غیر این صورت
-    // طبق سطح دسترسی نقش کاربر (این بخش قبلاً با جستجوی رشته‌ای روی SQL
-    // بازسازی می‌شد که شکننده بود — حالا یک‌بار و مستقیم تعیین می‌شود)
+    // طبق قانون دسترسی: هرکس تسک‌های خودش رو می‌بینه؛ «پرنت» علاوه بر
+    // خودش، تسک‌های همه‌ی زیرمجموعه‌های مستقیم/غیرمستقیمش رو هم می‌بینه
+    // (بدون محدودیت به ۲ یا ۳ سطح ثابت — با crm_get_subtree_ids که کل
+    // زیردرخت رو دنبال می‌کنه).
     if (!empty($filter_user) && ($is_super || $is_admin || $user['role'] === 'manager')) {
         $where[] = "t.user_id = ?";
         $params[] = $filter_user;
@@ -197,31 +203,13 @@ if ($action === 'list_all') {
     elseif ($is_super) {
         // super_admin همه رو میبینه - بدون محدودیت
     }
-    elseif ($is_admin) {
-        // admin: تسک‌های خودش + همه زیرمجموعه‌ها (مستقیم و غیرمستقیم)
-        $where[] = "t.user_id IN (
-            SELECT id FROM users 
-            WHERE id = ? 
-               OR parent_id = ?
-               OR parent_id IN (SELECT id FROM users WHERE parent_id = ?)
-        )";
-        $params[] = $user['id'];
-        $params[] = $user['id'];
-        $params[] = $user['id'];
-    }
-    elseif ($user['role'] === 'manager') {
-        // manager: تسک‌های خودش + زیرمجموعه‌های مستقیم
-        $where[] = "t.user_id IN (
-            SELECT id FROM users 
-            WHERE id = ? OR parent_id = ?
-        )";
-        $params[] = $user['id'];
-        $params[] = $user['id'];
-    }
     else {
-        // agent: فقط تسک‌های خودش
-        $where[] = "t.user_id = ?";
-        $params[] = $user['id'];
+        $scope_ids = ($is_admin || $user['role'] === 'manager')
+            ? crm_get_subtree_ids($user['id'])
+            : [(int)$user['id']];
+        $in = implode(',', array_fill(0, count($scope_ids), '?'));
+        $where[] = "t.user_id IN ($in)";
+        foreach ($scope_ids as $sid) { $params[] = $sid; }
     }
     
     $where_clause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';

@@ -60,7 +60,7 @@
 .dash-reminder-topic { font-size:11px; color:var(--ink-soft); }
 .dash-reminder-arrow { font-size:16px; color:var(--line); flex-shrink:0; }
 
-/* برچسب تأخیر — برای فرصت‌هایی که از تاریخ پیگیری‌شان گذشته */
+/* برچسب تأخیر — برای فرصت‌های فروشی که از تاریخ پیگیری‌شان گذشته */
 .dash-reminder-time.overdue { background:#FCE8E6; color:var(--danger); }
 .dash-overdue-tag {
     font-size:10.5px; font-weight:700; color:var(--danger); background:#FCE8E6;
@@ -241,7 +241,7 @@
 <!-- ═══ اکشن سریع ═══ -->
 <div class="dash-quick">
     <a href="index.php?page=customers&action=add" class="primary">مشتری جدید</a>
-    <a href="index.php?page=tasks&action=add" class="secondary">فرصت جدید</a>
+    <a href="index.php?page=tasks&action=add" class="secondary">فرصت فروش جدید</a>
 </div>
 
 <!-- ═══ دکمه باز کردن آمار و گزارش بیشتر ═══ -->
@@ -367,7 +367,7 @@
     </div>
     <?php endif; ?>
 
-    <!-- ═══ دید کلی فرصت‌های باز ═══ -->
+    <!-- ═══ دید کلی فرصت‌های فروشِ باز ═══ -->
     <?php if (!empty($open_tasks_overview)): ?>
     <div class="dash-card">
         <div class="dash-card-hd">
@@ -382,7 +382,7 @@
                     <thead>
                         <tr>
                             <th>مشتری</th>
-                            <th>موضوع فرصت</th>
+                            <th>موضوع فرصت فروش</th>
                             <th>مالک</th>
                             <th>پیگیری بعدی</th>
                         </tr>

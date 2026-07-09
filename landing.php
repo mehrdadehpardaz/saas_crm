@@ -40,8 +40,8 @@ $open_login_modal = !empty($login_error) || (($_GET['action'] ?? '') === 'login'
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>پیگیر — نرم‌افزار مدیریت ارتباط با مشتری برای کسب‌وکارهای کوچک</title>
-<meta name="description" content="پیگیر، CRM ساده و فارسی برای تیم‌های فروش کوچک. مشتری بساز، براش تسک تعریف کن، فعالیت‌ها رو زیرش ثبت کن — هیچ فالوآپی رو از دست نده. ۱۴ روز رایگان.">
-<meta name="keywords" content="نرم افزار CRM, مدیریت مشتری, پیگیری فروش, نرم افزار فروش, سی آر ام فارسی, مدیریت تسک فروش">
+<meta name="description" content="پیگیر، CRM ساده و فارسی برای تیم‌های فروش کوچک. مشتری بساز، براش فرصت فروش تعریف کن، فعالیت‌ها رو زیرش ثبت کن — هیچ فالوآپی رو از دست نده. ۱۴ روز رایگان.">
+<meta name="keywords" content="نرم افزار CRM, مدیریت مشتری, پیگیری فروش, نرم افزار فروش, سی آر ام فارسی, مدیریت فرصت فروش">
 <link rel="canonical" href="https://paygiro.ir/">
 
 <!-- Open Graph -->
@@ -85,10 +85,10 @@ $open_login_modal = !empty($login_error) || (($_GET['action'] ?? '') === 'login'
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "چرا اول باید مشتری بسازم، بعد تسک، بعد فعالیت؟",
+      "name": "چرا اول باید مشتری بسازم، بعد فرصت فروش، بعد فعالیت؟",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "چون هر کدوم یه لایه‌ست: مشتری یعنی «این شرکت رو می‌شناسم»، تسک یعنی «این هدف مشخص رو دنبال می‌کنم» (مثل فروش یه محصول خاص)، و فعالیت یعنی «این کاری بود که همین الان انجام دادم». بدون مشتری، تسکی وجود نداره؛ بدون تسک، معلوم نیست فعالیت‌هات به کجا ختم میشن."
+        "text": "چون هر کدوم یه لایه‌ست: مشتری یعنی «این شرکت رو می‌شناسم»، فرصت فروش یعنی «این هدف مشخص رو دنبال می‌کنم» (مثل فروش یه محصول خاص)، و فعالیت یعنی «این کاری بود که همین الان انجام دادم». بدون مشتری، فرصت فروشی وجود نداره؛ بدون فرصت فروش، معلوم نیست فعالیت‌هات به کجا ختم میشن."
       }
     },
     {
@@ -120,7 +120,7 @@ $open_login_modal = !empty($login_error) || (($_GET['action'] ?? '') === 'login'
       "name": "گزارش‌ها چه چیزی رو نشون میدن؟",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "سه سطح گزارش دارید: گزارش شخصی خودتون، گزارش مقایسه‌ای کاربران زیرمجموعه، و گزارش مقایسه تیم‌های مدیران — با نمودار روند روزانه، نرخ تکمیل تسک و سهم هر نفر از مشتری و فعالیت."
+        "text": "سه سطح گزارش دارید: گزارش شخصی خودتون، گزارش مقایسه‌ای کاربران زیرمجموعه، و گزارش مقایسه تیم‌های مدیران — با نمودار روند روزانه، نرخ تکمیل فرصت فروش و سهم هر نفر از مشتری و فعالیت."
       }
     },
     {
@@ -300,7 +300,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
 .section-title{font-size:clamp(24px,3.6vw,34px);font-weight:800;color:var(--ink);letter-spacing:-.01em;margin-bottom:12px}
 .section-desc{font-size:15.5px;color:var(--ink-soft)}
 
-/* ════════ WORKFLOW MINI (مشتری → تسک → فعالیت) ════════ */
+/* ════════ WORKFLOW MINI (مشتری → فرصت فروش → فعالیت) ════════ */
 .flow-section{background:var(--paper-2)}
 .flow-mini{
   display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
@@ -516,7 +516,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
   <div class="container nav-inner">
     <a href="#" class="nav-logo">
       <span class="nav-logo-mark">پ</span>
-      پیگیریو
+      پیگیر
     </a>
     <nav class="nav-links">
       <a href="#flow">چطور کار می‌کنه</a>
@@ -541,8 +541,8 @@ a:focus-visible,button:focus-visible,input:focus-visible{
   <div class="container hero-grid">
     <div>
       <div class="eyebrow"><span class="eyebrow-dot"></span> ۱۴ روز رایگان، بدون نیاز به کارت بانکی</div>
-      <h1>مشتری بساز، تسک بذار،<br><em>فعالیت رو پیگیری کن</em></h1>
-      <p class="hero-sub">پیگیر، CRM ساده فارسیه که یک منطق روشن داره: اول مشتری رو ثبت می‌کنی، براش یک تسک (هدف مشخص) تعریف می‌کنی، و هر تماس یا جلسه رو به‌عنوان فعالیت زیر همون تسک می‌نویسی — تا وقتی به نتیجه برسه.</p>
+      <h1>مشتری بساز، فرصت فروش بذار،<br><em>فعالیت رو پیگیری کن</em></h1>
+      <p class="hero-sub">پیگیر، CRM ساده فارسیه که یک منطق روشن داره: اول مشتری رو ثبت می‌کنی، براش یک فرصت فروش (هدف مشخص) تعریف می‌کنی، و هر تماس یا جلسه رو به‌عنوان فعالیت زیر همون فرصت فروش می‌نویسی — تا وقتی به نتیجه برسه.</p>
       <div class="hero-ctas">
         <?php if ($is_logged_in): ?>
             <a href="index.php?page=dashboard" class="btn btn-primary btn-lg">رفتن به داشبورد</a>
@@ -624,12 +624,12 @@ a:focus-visible,button:focus-visible,input:focus-visible{
   </div>
 </div>
 
-<!-- ═══════════ WORKFLOW MINI (مشتری → تسک → فعالیت) ═══════════ -->
+<!-- ═══════════ WORKFLOW MINI (مشتری → فرصت فروش → فعالیت) ═══════════ -->
 <section class="section flow-section" id="flow">
   <div class="container">
     <div class="section-head reveal">
       <div class="section-eyebrow">منطق کار با پیگیر</div>
-      <h2 class="section-title">مشتری → تسک → فعالیت</h2>
+      <h2 class="section-title">مشتری → فرصت فروش → فعالیت</h2>
       <p class="section-desc">یک مسیر ساده و همیشه یکسان — همینه که پیگیر رو ساده نگه می‌داره.</p>
     </div>
 
@@ -641,7 +641,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
       <div class="flow-mini-arrow" aria-hidden="true">←</div>
       <div class="flow-mini-item">
         <div class="flow-mini-icon" style="background:#FFF1EA">✅</div>
-        <span>تسک تعریف کن</span>
+        <span>فرصت فروش تعریف کن</span>
       </div>
       <div class="flow-mini-arrow" aria-hidden="true">←</div>
       <div class="flow-mini-item">
@@ -687,12 +687,12 @@ a:focus-visible,button:focus-visible,input:focus-visible{
       </div>
       <div class="feat-card reveal">
         <div class="feat-icon" style="background:#FFF1EA">✅</div>
-        <h3>تسک با هدف مشخص</h3>
-        <p>هر تسک تا نتیجه (تکمیل، فروش یا لغو) توی داشبورد دیده می‌شه.</p>
+        <h3>فرصت فروش با هدف مشخص</h3>
+        <p>هر فرصت فروش تا نتیجه (تکمیل، فروش یا لغو) توی داشبورد دیده می‌شه.</p>
       </div>
       <div class="feat-card reveal">
         <div class="feat-icon" style="background:#E7F7F3">📞</div>
-        <h3>فعالیت زیر هر تسک</h3>
+        <h3>فعالیت زیر هر فرصت فروش</h3>
         <p>تماس، جلسه، ایمیل یا یادداشت — تاریخچه کامل هر معامله.</p>
       </div>
       <div class="feat-card reveal">
@@ -812,7 +812,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
         <div class="price-period" id="periodNoteBase">پرداخت ماهانه</div>
         <ul class="price-feats">
           <li>دسترسی کامل ادمین</li>
-          <li>مدیریت نامحدود مشتری، تسک و فعالیت</li>
+          <li>مدیریت نامحدود مشتری، فرصت فروش و فعالیت</li>
           <li>گزارش‌گیری کامل تیم</li>
           <li>پشتیبان‌گیری اکسل و SQL</li>
           <li>۱۴ روز اول رایگان</li>
@@ -850,8 +850,8 @@ a:focus-visible,button:focus-visible,input:focus-visible{
 
     <div class="faq-list reveal">
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)">چرا اول باید مشتری بسازم، بعد تسک، بعد فعالیت؟ <span class="faq-icon">+</span></div>
-        <div class="faq-a">چون هر کدوم یه لایه‌ست: مشتری یعنی «این شرکت رو می‌شناسم»، تسک یعنی «این هدف مشخص رو دنبال می‌کنم»، و فعالیت یعنی «این کاری بود که همین الان انجام دادم». این ترتیب باعث میشه هیچ‌وقت گم نشی که کدوم پیگیری به کجا رسیده.</div>
+        <div class="faq-q" onclick="toggleFaq(this)">چرا اول باید مشتری بسازم، بعد فرصت فروش، بعد فعالیت؟ <span class="faq-icon">+</span></div>
+        <div class="faq-a">چون هر کدوم یه لایه‌ست: مشتری یعنی «این شرکت رو می‌شناسم»، فرصت فروش یعنی «این هدف مشخص رو دنبال می‌کنم»، و فعالیت یعنی «این کاری بود که همین الان انجام دادم». این ترتیب باعث میشه هیچ‌وقت گم نشی که کدوم پیگیری به کجا رسیده.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">آیا واقعاً ۱۴ روز رایگانه؟ <span class="faq-icon">+</span></div>
@@ -867,7 +867,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
       </div>
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">گزارش‌ها چه چیزی رو نشون میدن؟ <span class="faq-icon">+</span></div>
-        <div class="faq-a">سه سطح گزارش داری: گزارش شخصی خودت، مقایسه کاربران زیرمجموعه، و مقایسه تیم‌های مدیران — با نمودار روند روزانه و نرخ تکمیل تسک.</div>
+        <div class="faq-a">سه سطح گزارش داری: گزارش شخصی خودت، مقایسه کاربران زیرمجموعه، و مقایسه تیم‌های مدیران — با نمودار روند روزانه و نرخ تکمیل فرصت فروش.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">داده‌هام امنه؟ <span class="faq-icon">+</span></div>

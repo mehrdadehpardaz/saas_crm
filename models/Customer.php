@@ -8,27 +8,38 @@ class Customer {
      */
     public static function getAll($user_id, $is_manager = false, $search = '') {
         $pdo = getDB();
-        
-        $root_id = crm_get_company_root($user_id);
-        $member_ids = crm_get_company_members($root_id);
-        
-        if (empty($member_ids)) {
-            return [];
+
+        // قانون ۱: هر کاربری که company_id یکسانی با یک مشتری داشته باشه،
+        // اون مشتری رو توی صفحه‌ی مشتریان می‌بینه — بدون توجه به سلسله‌مراتب.
+        $stmt = $pdo->prepare("SELECT role, company_id FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $me = $stmt->fetch();
+
+        $where_scope  = "c.status = 'active'";
+        $scope_params = [];
+
+        if (!$me || ($me['role'] ?? '') !== 'super_admin') {
+            if (empty($me['company_id'])) {
+                // بدون company_id مشخص (داده‌ی خیلی قدیمی): محافظه‌کارانه فقط خودش
+                $where_scope .= " AND c.user_id = ?";
+                $scope_params[] = $user_id;
+            } else {
+                $where_scope .= " AND c.company_id = ?";
+                $scope_params[] = $me['company_id'];
+            }
         }
-        
-        $placeholders = implode(',', array_fill(0, count($member_ids), '?'));
-        
+        // super_admin: بدون محدودیت (همه‌ی مشتریان همه‌ی سازمان‌ها)
+
         $sql = "SELECT c.*, i.title as industry_title, u.full_name as agent_name, comp.name as company_label,
                 (SELECT COUNT(*) FROM activities WHERE customer_id = c.id) as activity_count
                 FROM customers c
                 LEFT JOIN industries i ON c.industry_id = i.id
                 LEFT JOIN companies comp ON c.company_id = comp.id
                 JOIN users u ON c.user_id = u.id
-                WHERE c.status = 'active' 
-                AND c.user_id IN ($placeholders)";
-        
-        $params = $member_ids;
-        
+                WHERE $where_scope";
+
+        $params = $scope_params;
+
         if (!empty($search)) {
             $sql .= " AND (c.company_name LIKE ? OR c.phone LIKE ? OR i.title LIKE ?)";
             $s = "%$search%";
@@ -91,7 +102,8 @@ class Customer {
                     $data['contact_person'],
                     $data['contact_position'] ?? null,
                     $data['contact_phone'] ?? null,
-                    $data['email'] ?? null
+                    $data['email'] ?? null,
+                    $data['user_id'] ?? null
                 );
             }
             
@@ -129,7 +141,8 @@ class Customer {
                 $data['contact_person'],
                 $data['contact_position'] ?? null,
                 $data['contact_phone'] ?? null,
-                $data['email'] ?? null
+                $data['email'] ?? null,
+                $data['acting_user_id'] ?? null
             );
         }
 
@@ -141,8 +154,13 @@ class Customer {
      * اگر مخاطب اصلی از قبل وجود داشته باشد، اطلاعاتش (از جمله شماره همراه)
      * بروزرسانی می‌شود؛ وگرنه یک مخاطب جدید با is_primary=1 ساخته می‌شود.
      * هیچ‌وقت مخاطب موجود را حذف نمی‌کند — فقط اضافه/بروزرسانی.
+     *
+     * $creator_user_id فقط موقع ساختِ مخاطبِ جدید ثبت می‌شود (تا مشخص باشه
+     * کدوم کاربر واقعاً این مخاطب رو ساخته)؛ در ویرایش، user_id سازنده‌ی
+     * قبلی دست‌نخورده می‌ماند — ویرایش کردن یعنی «تغییر اطلاعات»، نه
+     * «تغییر سازنده».
      */
-    public static function upsertPrimaryContact($customer_id, $full_name, $position = null, $phone = null, $email = null) {
+    public static function upsertPrimaryContact($customer_id, $full_name, $position = null, $phone = null, $email = null, $creator_user_id = null) {
         $full_name = trim((string)$full_name);
         if ($full_name === '') {
             return;
@@ -164,9 +182,9 @@ class Customer {
             $stmt = $pdo->prepare("UPDATE contacts SET full_name = ?, position = ?, phone = ?, email = ?, company_id = ? WHERE id = ?");
             $stmt->execute([$full_name, $position, $phone, $email, $company_id, $existing['id']]);
         } else {
-            $stmt = $pdo->prepare("INSERT INTO contacts (customer_id, company_id, full_name, position, phone, email, is_primary, status) 
-                                   VALUES (?, ?, ?, ?, ?, ?, 1, 'active')");
-            $stmt->execute([$customer_id, $company_id, $full_name, $position, $phone, $email]);
+            $stmt = $pdo->prepare("INSERT INTO contacts (customer_id, user_id, company_id, full_name, position, phone, email, is_primary, status) 
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, 1, 'active')");
+            $stmt->execute([$customer_id, $creator_user_id, $company_id, $full_name, $position, $phone, $email]);
         }
     }
 

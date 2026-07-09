@@ -56,13 +56,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $slots = $max_users - $active;
                     
                     if ($slots > 0) {
-                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'manager' AND status = 'inactive' ORDER BY created_at DESC LIMIT ?");
+                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'manager' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
                         $stmt->execute([$company, $company, $slots]);
                         $slots -= $stmt->rowCount();
                     }
                     
                     if ($slots > 0) {
-                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'agent' AND status = 'inactive' ORDER BY created_at DESC LIMIT ?");
+                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'agent' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
                         $stmt->execute([$company, $company, $slots]);
                     }
                 }
@@ -104,13 +104,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $slots = $max_users - $active;
                     
                     if ($slots > 0) {
-                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'manager' AND status = 'inactive' ORDER BY created_at DESC LIMIT ?");
+                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'manager' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
                         $stmt->execute([$company, $company, $slots]);
                         $slots -= $stmt->rowCount();
                     }
                     
                     if ($slots > 0) {
-                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'agent' AND status = 'inactive' ORDER BY created_at DESC LIMIT ?");
+                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'agent' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
                         $stmt->execute([$company, $company, $slots]);
                     }
                 }
@@ -135,13 +135,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $slots = $max_users - $active;
                 
                 if ($slots > 0) {
-                    $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'manager' AND status = 'inactive' ORDER BY created_at DESC LIMIT ?");
+                    $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'manager' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
                     $stmt->execute([$company, $company, $slots]);
                     $slots -= $stmt->rowCount();
                 }
                 
                 if ($slots > 0) {
-                    $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'agent' AND status = 'inactive' ORDER BY created_at DESC LIMIT ?");
+                    $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'agent' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
                     $stmt->execute([$company, $company, $slots]);
                 }
             }
@@ -150,8 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // آپدیت company_name اگر وارد شده
         if (!empty($_POST['company_name'])) {
             $cn = crm_sanitize($_POST['company_name']);
-            $cid = crm_get_or_create_company_id($cn);
-            $pdo->prepare("UPDATE users SET company_name = ?, company_id = ? WHERE id = ?")->execute([$cn, $cid, $user['id']]);
+            $pdo->prepare("UPDATE users SET company_name = ? WHERE id = ?")->execute([$cn, $user['id']]);
         }
         
         if (empty($error)) {

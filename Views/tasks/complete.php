@@ -19,7 +19,7 @@
 .tc-back-link:hover { color:var(--tc-ember-deep); }
 .tc-header h2 { font-size:18px; font-weight:800; color:var(--tc-ink); letter-spacing:-.01em; }
 
-/* اطلاعات فرصت */
+/* اطلاعات فرصت فروش */
 .tc-info-card {
     background:var(--tc-card); border:1px solid var(--tc-line); border-radius:14px;
     overflow:hidden; margin-bottom:16px;
@@ -93,14 +93,14 @@
     <a href="index.php?page=tasks&action=view&id=<?= $task['id'] ?>" class="tc-back-link">
         ← <?= crm_sanitize($task['title']) ?>
     </a>
-    <h2>✅ تکمیل فرصت</h2>
+    <h2>✅ تکمیل فرصت فروش</h2>
 </div>
 
-<!-- اطلاعات فرصت -->
+<!-- اطلاعات فرصت فروش -->
 <div class="tc-info-card">
     <div class="tc-info-row">
         <span class="tc-info-icon">📋</span>
-        <span class="tc-info-label">فرصت</span>
+        <span class="tc-info-label">فرصت فروش</span>
         <span class="tc-info-val"><?= crm_sanitize($task['title']) ?></span>
     </div>
     <div class="tc-info-row">
@@ -127,7 +127,7 @@
     </div>
 
     <div class="tc-notice">
-        ✅ با زدن این دکمه، فرصت <strong>تکمیل شده</strong> علامت می‌خورد و از لیست فرصت‌های فعال خارج می‌شود.
+        ✅ با زدن این دکمه، فرصت فروش <strong>تکمیل شده</strong> علامت می‌خورد و از لیست فرصت‌های فروش فعال خارج می‌شود.
     </div>
 
     <div class="tc-group">

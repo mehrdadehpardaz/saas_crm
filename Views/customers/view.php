@@ -47,7 +47,6 @@ $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
 .cv-info-table td { padding:10px 16px; color:var(--ink); font-weight:500; }
 .cv-tel-link { color:var(--blue); text-decoration:none; direction:ltr; display:inline-flex; align-items:center; gap:5px; }
 .cv-tel-link:hover { text-decoration:underline; }
-.cv-org-tag { background:#F3E8FD; color:#9c27b0; padding:2px 9px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; margin-right:8px; }
 
 /* ── جدول مخاطبین (مثل اکسل) ── */
 .cv-table-wrap { overflow-x:auto; }
@@ -68,7 +67,7 @@ $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
 .cv-empty { padding:24px 16px; text-align:center; color:var(--ink-soft); font-size:13px; }
 .cv-empty a { color:var(--ember-deep); font-weight:700; text-decoration:none; }
 
-/* status pill برای تسک‌ها */
+/* status pill برای فرصت‌های فروش */
 .cv-status-pill { font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:10px; display:inline-flex; align-items:center; white-space:nowrap; }
 .cv-status-active { background:#E7F7F3; color:var(--teal-deep); }
 .cv-status-completed { background:#E8F0FE; color:var(--blue); }
@@ -77,7 +76,7 @@ $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
 .cv-locked { color:var(--ink-soft); }
 .cv-table-row-link { text-decoration:none; color:inherit; display:contents; }
 
-/* موبایل: مخاطبین و تسک‌ها به کارت تبدیل می‌شوند تا اسکرول افقی نداشته باشند */
+/* موبایل: مخاطبین و فرصت‌های فروش به کارت تبدیل می‌شوند تا اسکرول افقی نداشته باشند */
 .cv-mobile-cards { display:none; }
 .cv-m-card { padding:12px 16px; border-bottom:1px solid var(--paper-2); }
 .cv-m-card:last-child { border-bottom:none; }
@@ -97,7 +96,7 @@ $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
 <div class="cv-header">
     <h2><?= crm_sanitize($customer['company_name']) ?></h2>
     <div class="cv-actions">
-        <a href="index.php?page=tasks&action=add&customer_id=<?= $customer['id'] ?>" class="cv-btn cv-btn-primary">+ تسک جدید</a>
+        <a href="index.php?page=tasks&action=add&customer_id=<?= $customer['id'] ?>" class="cv-btn cv-btn-primary">+ فرصت فروش جدید</a>
         <a href="index.php?page=customers&action=edit&id=<?= $customer['id'] ?>" class="cv-btn cv-btn-outline">ویرایش</a>
         <a href="index.php?page=customers" class="cv-btn cv-btn-outline">بازگشت</a>
     </div>
@@ -119,15 +118,6 @@ $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
 <div class="cv-card">
     <div class="cv-card-hd"><h3>اطلاعات مشتری</h3></div>
     <table class="cv-info-table">
-        <?php if ($is_super): ?>
-        <tr>
-            <th>سازنده</th>
-            <td>
-                <?= crm_sanitize($customer['agent_name'] ?? '—') ?>
-                <span class="cv-org-tag"><?= crm_sanitize($customer['company_label'] ?? '—') ?></span>
-            </td>
-        </tr>
-        <?php endif; ?>
         <tr><th>صنعت</th><td><?= crm_sanitize($customer['industry_title'] ?? 'ثبت نشده') ?></td></tr>
         <tr><th>شخص اصلی</th><td><?= crm_sanitize($customer['contact_person'] ?? 'ندارد') ?></td></tr>
         <tr>
@@ -243,15 +233,15 @@ $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
     <?php endif; ?>
 </div>
 
-<!-- ═══ تسک‌ها — جدول ═══ -->
+<!-- ═══ فرصت‌های فروش — جدول ═══ -->
 <div class="cv-card">
     <div class="cv-card-hd">
-        <h3>تسک‌ها <span class="cv-count-badge"><?= count($tasks) ?></span></h3>
-        <a href="index.php?page=tasks&action=add&customer_id=<?= $customer['id'] ?>" class="cv-btn cv-btn-primary cv-btn-sm">+ تسک جدید</a>
+        <h3>فرصت‌های فروش <span class="cv-count-badge"><?= count($tasks) ?></span></h3>
+        <a href="index.php?page=tasks&action=add&customer_id=<?= $customer['id'] ?>" class="cv-btn cv-btn-primary cv-btn-sm">+ فرصت فروش جدید</a>
     </div>
 
     <?php if (empty($tasks)): ?>
-        <div class="cv-empty">هنوز تسکی برای این مشتری تعریف نشده.</div>
+        <div class="cv-empty">هنوز فرصت فروشی برای این مشتری تعریف نشده.</div>
     <?php else: ?>
         <?php
         $status_map = [
@@ -260,23 +250,11 @@ $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
             'sold'      => ['cv-status-sold', 'فروش'],
             'cancelled' => ['cv-status-cancelled', 'لغو'],
         ];
-        // پیش‌محاسبه دسترسی هر تسک (یک‌بار، نه داخل دو حلقه جدا)
+        // پیش‌محاسبه دسترسی هر فرصت فروش (یک‌بار، نه داخل دو حلقه جدا)
+        // قانون: خودِ سازنده‌ی فرصت فروش، یا هر «پرنت» بالادستی‌اش، دسترسی کامل داره.
         $task_access = [];
         foreach ($tasks as $t) {
-            $can_view_task = ($t['user_id'] == $user['id']);
-            if (!$can_view_task && $is_manager) {
-                $pdo = getDB();
-                $current_id = $t['user_id'];
-                for ($i = 0; $i < 5; $i++) {
-                    $stmt = $pdo->prepare("SELECT parent_id FROM users WHERE id = ?");
-                    $stmt->execute([$current_id]);
-                    $p = $stmt->fetch();
-                    if (!$p || !$p['parent_id']) break;
-                    if ($p['parent_id'] == $user['id']) { $can_view_task = true; break; }
-                    $current_id = $p['parent_id'];
-                }
-            }
-            $task_access[$t['id']] = $can_view_task;
+            $task_access[$t['id']] = crm_user_can_access_owned_record($t['user_id']);
         }
         ?>
 

@@ -63,7 +63,11 @@ if (crm_is_logged_in()) {
                 $slots = $max_limit - $active_count;
                 foreach (['manager','agent'] as $role) {
                     if ($slots <= 0) break;
-                    $stmt = $pdo->prepare("UPDATE users SET status='active', plan_expiry=(SELECT plan_expiry FROM users WHERE company_name=? AND role='admin' LIMIT 1) WHERE company_name=? AND role=? AND status='inactive' ORDER BY created_at DESC LIMIT ?");
+                    // نکته: هیچ‌وقت کاربری رو فعال نکن که پرنتِ مستقیمش غیرفعاله،
+                    // و هیچ‌وقت کاربری رو که ادمین خودش دستی غیرفعالش کرده
+                    // (deactivated_manually=1) خودکار فعال نکن — فقط کسایی که
+                    // به‌خاطر پر شدن سقف پلن به‌صورت خودکار غیرفعال شده بودن.
+                    $stmt = $pdo->prepare("UPDATE users SET status='active', plan_expiry=(SELECT plan_expiry FROM users WHERE company_name=? AND role='admin' LIMIT 1) WHERE company_name=? AND role=? AND status='inactive' AND deactivated_manually=0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status='active')) ORDER BY created_at DESC LIMIT ?");
                     $stmt->execute([$current_user['company_name'], $current_user['company_name'], $role, $slots]);
                     $slots -= $stmt->rowCount();
                 }
@@ -397,7 +401,7 @@ $nav_groups = [
             ['page' => 'dashboard',  'icon' => '🏠', 'label' => 'داشبورد'],
             ['page' => 'customers',  'icon' => '🏢', 'label' => 'مشتریان'],
             ['page' => 'contacts',   'icon' => '👤', 'label' => 'مخاطبین'],
-            ['page' => 'tasks',      'icon' => '✅', 'label' => 'فرصت‌ها'],
+            ['page' => 'tasks',      'icon' => '✅', 'label' => 'فرصت‌های فروش'],
         ],
     ],
 ];
@@ -434,7 +438,7 @@ $nav_groups[] = [
 <header class="crm-topbar">
     <a href="index.php?page=dashboard" class="crm-topbar-logo">
         <span class="crm-logo-mark" aria-hidden="true">پ</span>
-        پیگیریو
+        پیگیر
     </a>
 </header>
 
@@ -521,7 +525,7 @@ $nav_groups[] = [
     </a>
     <a href="index.php?page=tasks" class="crm-tab-item <?= $page==='tasks'?'active':'' ?>" <?= $page==='tasks' ? 'aria-current="page"' : '' ?>>
         <span class="crm-tab-icon" aria-hidden="true">✅</span>
-        <span class="crm-tab-label">فرصت ها</span>
+        <span class="crm-tab-label">فرصت‌های فروش</span>
     </a>
     <button type="button" class="crm-tab-item <?= $is_on_secondary_page ? 'active' : '' ?>" id="crm-more-btn" aria-haspopup="true" aria-expanded="false">
         <span class="crm-tab-icon" aria-hidden="true">⋯</span>

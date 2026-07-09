@@ -5,31 +5,20 @@ class Task {
     
     public static function getAll($customer_id, $user_id, $is_manager = false) {
         $pdo = getDB();
-        
-        // همه اعضای شرکت میتونن تسک‌های روی یه مشتری رو ببینن
-        // ولی فقط عنوان و owner رو (محدودیت توی view اعمال میشه)
-        $root_id = crm_get_company_root($user_id);
-        $member_ids = crm_get_company_members($root_id);
-        
-        if (empty($member_ids)) {
-            return [];
-        }
-        
-        $placeholders = implode(',', array_fill(0, count($member_ids), '?'));
-        
+
+        // نمایش «این‌که تسکی هست» برای همه‌ی اعضای سازمان آزاده (چون خودِ
+        // مشتری company-wide قابل مشاهده‌ست) — ولی دسترسی کامل به جزئیات
+        // هر تسک را crm_user_can_access_owned_record() در لایه‌ی نمایش
+        // (per-row) مشخص می‌کند، نه این کوئری.
         $sql = "SELECT t.*, u.full_name as agent_name, comp.name as company_label
                 FROM tasks t
                 JOIN users u ON t.user_id = u.id
                 LEFT JOIN companies comp ON t.company_id = comp.id
                 WHERE t.customer_id = ?
-                AND t.user_id IN ($placeholders)";
-        
-        $params = array_merge([$customer_id], $member_ids);
-        
-        $sql .= " ORDER BY t.created_at DESC";
-        
+                ORDER BY t.created_at DESC";
+
         $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
+        $stmt->execute([$customer_id]);
         return $stmt->fetchAll();
     }
 

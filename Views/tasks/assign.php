@@ -23,7 +23,7 @@
     padding:11px 16px; font-size:13px; margin-bottom:16px;
 }
 
-/* اطلاعات فرصت */
+/* اطلاعات فرصت فروش */
 .ta-info-card {
     background:var(--ta-card); border:1px solid var(--ta-line); border-radius:14px;
     overflow:hidden; margin-bottom:16px;
@@ -93,18 +93,18 @@
     <a href="index.php?page=tasks&action=view&id=<?= $task['id'] ?>" class="ta-back-link">
         ← <?= crm_sanitize($task['title']) ?>
     </a>
-    <h2>🔄 انتقال فرصت</h2>
+    <h2>🔄 انتقال فرصت فروش</h2>
 </div>
 
 <?php if ($error): ?>
     <div class="ta-alert-error"><?= $error ?></div>
 <?php endif; ?>
 
-<!-- اطلاعات فرصت -->
+<!-- اطلاعات فرصت فروش -->
 <div class="ta-info-card">
     <div class="ta-info-row">
         <span class="ta-info-icon">📋</span>
-        <span class="ta-info-label">فرصت</span>
+        <span class="ta-info-label">فرصت فروش</span>
         <span class="ta-info-val"><?= crm_sanitize($task['title']) ?></span>
     </div>
     <div class="ta-info-row">
@@ -145,7 +145,7 @@
 
     <div class="ta-warning">
         <span class="ta-warning-icon">⚠️</span>
-        <span>با انتقال این فرصت، تمام فعالیت‌های قبلی هم به کاربر جدید منتقل می‌شوند.</span>
+        <span>با انتقال این فرصت فروش، تمام فعالیت‌های قبلی هم به کاربر جدید منتقل می‌شوند.</span>
     </div>
 
     <div class="ta-actions">

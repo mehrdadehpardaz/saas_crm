@@ -151,9 +151,9 @@ elseif ($action === 'edit' && $id) {
         exit;
     }
     
-    // چک دسترسی — باید مشتری متعلق به همان شرکت کاربر باشد
+    // چک دسترسی — طبق قانون: خودِ سازنده‌ی مخاطب، یا هر «پرنت» بالادستی‌اش
     $customer = Customer::getById($contact['customer_id']);
-    $can_edit = crm_user_can_access_customer($contact['customer_id']);
+    $can_edit = crm_user_can_access_owned_record($contact['user_id'] ?? null);
     
     if (!$can_edit) {
         echo '<div class="alert alert-error">⛔ شما اجازه ویرایش این مخاطب را ندارید.</div>';
@@ -174,6 +174,10 @@ elseif ($action === 'list' || $action === 'index') {
     // مدیرفروش، مخاطبی رو برای مشتریِ یک کارشناسِ دیگه ثبت کرده باشه.
     // برای تشخیص محدوده‌ی دسترسی (شرکت/زیرمجموعه) هنوز از صاحبِ مشتری
     // (cu.user_id) به اسم owner_scope_id استفاده می‌کنیم.
+    // قانون دسترسی: هرکس مخاطب‌هایی که خودش ساخته رو می‌بینه؛ «پرنت»
+    // علاوه بر خودش، مخاطب‌های همه‌ی زیرمجموعه‌های مستقیم/غیرمستقیمش رو
+    // هم می‌بینه — بر اساس سازنده‌ی واقعیِ مخاطب (co.user_id)، نه صاحبِ
+    // مشتری. سوپر ادمین همه‌چیز رو می‌بینه.
     if ($is_super) {
         $contacts = $pdo->query("
             SELECT co.*, cu.company_name AS customer_name, cu.id AS cid,
@@ -187,22 +191,9 @@ elseif ($action === 'list' || $action === 'index') {
             WHERE co.status = 'active'
             ORDER BY co.id DESC
         ")->fetchAll();
-    } elseif ($is_admin) {
-        $stmt = $pdo->prepare("
-            SELECT co.*, cu.company_name AS customer_name, cu.id AS cid,
-                   creator.full_name AS owner_name, co.user_id AS owner_id,
-                   cu.user_id AS owner_scope_id, comp.name AS company_label
-            FROM contacts co
-            LEFT JOIN customers cu ON co.customer_id = cu.id
-            LEFT JOIN users u ON cu.user_id = u.id
-            LEFT JOIN users creator ON co.user_id = creator.id
-            LEFT JOIN companies comp ON co.company_id = comp.id
-            WHERE co.status = 'active' AND u.company_name = ?
-            ORDER BY co.id DESC
-        ");
-        $stmt->execute([$user['company_name']]);
-        $contacts = $stmt->fetchAll();
     } else {
+        $scope_ids = crm_get_subtree_ids($user['id']);
+        $in = implode(',', array_fill(0, count($scope_ids), '?'));
         $stmt = $pdo->prepare("
             SELECT co.*, cu.company_name AS customer_name, cu.id AS cid,
                    creator.full_name AS owner_name, co.user_id AS owner_id,
@@ -212,10 +203,10 @@ elseif ($action === 'list' || $action === 'index') {
             LEFT JOIN users u ON cu.user_id = u.id
             LEFT JOIN users creator ON co.user_id = creator.id
             LEFT JOIN companies comp ON co.company_id = comp.id
-            WHERE co.status = 'active' AND cu.user_id = ?
+            WHERE co.status = 'active' AND co.user_id IN ($in)
             ORDER BY co.id DESC
         ");
-        $stmt->execute([$user['id']]);
+        $stmt->execute($scope_ids);
         $contacts = $stmt->fetchAll();
     }
 

@@ -217,3 +217,14 @@ ALTER TABLE `contacts` ADD COLUMN `user_id` INT DEFAULT NULL AFTER `customer_id`
 
 ALTER TABLE `contacts`
   ADD FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL;
+
+-- migration_manual_deactivation_flag.sql
+-- رفع تناقض: وقتی ادمین یک کاربر رو دستی غیرفعال می‌کنه، ولی سقف پلن
+-- هنوز جا داره (مثلاً سقف ۵ نفر و فقط ۳ کاربر فعال)، منطق خودکارِ
+-- «پر کردن ظرفیت خالی» (که هر بار توی index.php و بعد از خرید/تمدید پلن
+-- اجرا می‌شه) همون کاربر رو بدون توجه به تصمیم دستی ادمین دوباره فعال
+-- می‌کرد. علتش این بود که سیستم هیچ فرقی بین «غیرفعال چون سقف پر شده
+-- بود» و «غیرفعال چون ادمین خودش خواسته» نمی‌ذاشت.
+
+ALTER TABLE `users`
+  ADD COLUMN `deactivated_manually` TINYINT(1) NOT NULL DEFAULT 0 AFTER `status`;

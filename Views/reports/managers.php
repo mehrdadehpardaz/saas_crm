@@ -28,7 +28,7 @@ $chart_labels_map = [
     'activities' => 'کل فعالیت‌ها', 'total_activities' => 'کل فعالیت‌ها',
     'calls' => 'تماس‌ها', 'meetings' => 'جلسات',
     'customers' => 'مشتریان جدید', 'contacts' => 'مخاطبین',
-    'tasks' => 'تسک‌ها', 'completed' => 'تسک تکمیل‌شده',
+    'tasks' => 'فرصت‌های فروش', 'completed' => 'فرصت فروش تکمیل‌شده',
 ];
 $js_field_map = [
     'activities' => 'total', 'total_activities' => 'total', 'calls' => 'calls',
@@ -71,7 +71,7 @@ $done_rate     = $grand_tasks > 0 ? round($grand_done / $grand_tasks * 100) : 0;
                 <?php
                 $opts = [
                     'activities'=>'کل فعالیت‌ها','calls'=>'تماس‌ها','meetings'=>'جلسات',
-                    'customers'=>'مشتریان جدید','contacts'=>'مخاطبین','tasks'=>'تسک‌ها','completed'=>'تسک‌های تکمیل',
+                    'customers'=>'مشتریان جدید','contacts'=>'مخاطبین','tasks'=>'فرصت‌های فروش','completed'=>'فرصت‌های فروش تکمیل‌شده',
                 ];
                 foreach ($opts as $v => $l): ?>
                 <option value="<?= $v ?>" <?= $chart_type === $v ? 'selected' : '' ?>><?= $l ?></option>
@@ -248,7 +248,7 @@ $done_rate     = $grand_tasks > 0 ? round($grand_done / $grand_tasks * 100) : 0;
             <div style="font-size:27px;font-weight:800;color:#FF6B35">
                 <?= count($managers_data) > 0 ? round($grand_total / count($managers_data)) : 0 ?>
             </div>
-            <div style="font-size:11px;color:var(--r-ink-soft);margin-top:12px">میانگین تسک تکمیل‌شده</div>
+            <div style="font-size:11px;color:var(--r-ink-soft);margin-top:12px">میانگین فرصت فروش تکمیل‌شده</div>
             <div style="font-size:27px;font-weight:800;color:#16A085"><?= $done_rate ?>%</div>
         </div>
     </div>

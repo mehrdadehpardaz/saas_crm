@@ -130,6 +130,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
         
+        // نمی‌تونی کاربری رو فعال کنی وقتی پرنتِ مستقیمش غیرفعاله —
+        // یه زیرمجموعه منطقاً نمی‌تونه فعال باشه درحالی‌که مدیر بالادستی‌اش غیرفعاله.
+        if ($status_new === 'active' && !empty($edit_user_data['parent_id'])) {
+            $stmt = $pdo->prepare("SELECT status FROM users WHERE id = ?");
+            $stmt->execute([$edit_user_data['parent_id']]);
+            $parent_status = $stmt->fetchColumn();
+
+            if ($parent_status === 'inactive') {
+                echo '<div class="alert alert-error">⛔ نمی‌توان این کاربر را فعال کرد چون مدیر بالادستی‌اش غیرفعال است. اول مدیر را فعال کنید.</div>';
+                echo '<a href="index.php?page=users" class="btn">بازگشت</a>';
+                exit;
+            }
+        }
+
         // چک سقف قبل از فعال‌سازی
         if ($status_new === 'active' && $edit_user_data['status'] === 'inactive' && !$is_super) {
             $company = $edit_user_data['company_name'] ?? $user['company_name'];
@@ -153,8 +167,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // اجرای UPDATE
-        $stmt = $pdo->prepare("UPDATE users SET full_name = ?, position_title = ?, phone = ?, status = ? WHERE id = ?");
-        $stmt->execute([$full_name, $position_title, $phone, $status_new, $id]);
+        // نکته‌ی مهم: deactivated_manually اینجا صراحتاً ثبت می‌شه تا منطق
+        // خودکارِ «پر کردن ظرفیت خالی پلن» (توی index.php و PlansController)
+        // این کاربر رو دوباره فعال نکنه، حتی اگه سقف پلن هنوز جا داشته باشه.
+        // وقتی خودِ ادمین دستی «فعال» رو انتخاب کنه، این پرچم پاک می‌شه.
+        $deactivated_manually = ($status_new === 'inactive') ? 1 : 0;
+        $stmt = $pdo->prepare("UPDATE users SET full_name = ?, position_title = ?, phone = ?, status = ?, deactivated_manually = ? WHERE id = ?");
+        $stmt->execute([$full_name, $position_title, $phone, $status_new, $deactivated_manually, $id]);
+
+        // وقتی یک مدیر/کاربر غیرفعال می‌شه، همه‌ی زیرمجموعه‌های مستقیم و
+        // غیرمستقیمش (کل زیردرخت، نه فقط یک سطح) هم باید غیرفعال بشن —
+        // چون طبق قانون بالا، زیرمجموعه نمی‌تونه فعال بمونه درحالی‌که
+        // پرنتش غیرفعاله. این‌ها رو هم «دستی» علامت می‌زنیم تا منطق خودکار
+        // سرِ خود دوباره فعالشون نکنه (فعال‌شدن دوباره باید از همینجا و
+        // با تأیید صریح ادمین انجام بشه، نه خودکار).
+        if ($status_new === 'inactive') {
+            $subtree_ids = crm_get_subtree_ids($id);
+            $descendant_ids = array_values(array_diff($subtree_ids, [(int)$id]));
+            if (!empty($descendant_ids)) {
+                $in = implode(',', array_fill(0, count($descendant_ids), '?'));
+                $pdo->prepare("UPDATE users SET status = 'inactive', deactivated_manually = 1 WHERE id IN ($in)")->execute($descendant_ids);
+            }
+        }
         
         // آپدیت mobile اگر وارد شده
         if (!empty($mobile)) {

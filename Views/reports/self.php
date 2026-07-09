@@ -59,7 +59,7 @@ $daily_json = json_encode(array_reverse($daily_js));
         ['label'=>'کل فعالیت',    'val'=>$total_act,             'color'=>'#0E8170','bg'=>'#E7F7F3','icon'=>'📋'],
         ['label'=>'مشتری جدید',   'val'=>$stats['customers']??0,'color'=>'#E6531E','bg'=>'#FFF1EA','icon'=>'🏢'],
         ['label'=>'مخاطب جدید',   'val'=>$stats['contacts']??0, 'color'=>'#1a73e8','bg'=>'#E8F0FE','icon'=>'👤'],
-        ['label'=>'تسک تکمیل‌شده','val'=>$stats['completed']??0,'color'=>'#16A085','bg'=>'#E7F7F3','icon'=>'✅'],
+        ['label'=>'فرصت فروش تکمیل‌شده','val'=>$stats['completed']??0,'color'=>'#16A085','bg'=>'#E7F7F3','icon'=>'✅'],
     ];
     if (isset($stats['sold'])) $kpis[] = ['label'=>'منجر به فروش','val'=>$stats['sold']??0,'color'=>'#FF6B35','bg'=>'#FFF1EA','icon'=>'💰'];
     if (isset($stats['cancelled'])) $kpis[] = ['label'=>'کنسل‌شده','val'=>$stats['cancelled']??0,'color'=>'#EA4335','bg'=>'#FCE8E6','icon'=>'❌'];
@@ -76,7 +76,7 @@ $daily_json = json_encode(array_reverse($daily_js));
 <?php if (($stats['tasks'] ?? 0) > 0): ?>
 <div class="rpt-card">
     <div class="rpt-card-hd">
-        <h3>📋 نرخ تکمیل تسک‌ها</h3>
+        <h3>📋 نرخ تکمیل فرصت‌های فروش</h3>
         <span style="font-size:13px;font-weight:800;color:<?= $task_rate >= 70 ? '#16A085' : ($task_rate >= 40 ? '#E6951E' : '#EA4335') ?>"><?= $task_rate ?>%</span>
     </div>
     <div class="rpt-card-body">

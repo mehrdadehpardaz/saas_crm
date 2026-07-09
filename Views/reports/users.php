@@ -44,7 +44,7 @@ $chart_labels = [
     'meetings'         => 'جلسات',
     'customers'        => 'مشتریان جدید',
     'contacts'         => 'مخاطبین',
-    'tasks'            => 'تسک‌ها',
+    'tasks'            => 'فرصت‌های فروش',
 ];
 $chart_field_map = [
     'activities'       => 'total',
@@ -83,7 +83,7 @@ $active_field = $chart_field_map[$chart_type] ?? 'total';
             <label>نمودار بر اساس</label>
             <select name="chart_type" onchange="this.form.submit()" style="width:100%">
                 <?php
-                $opts = ['activities'=>'کل فعالیت‌ها','calls'=>'تماس‌ها','meetings'=>'جلسات','customers'=>'مشتریان جدید','contacts'=>'مخاطبین','tasks'=>'تسک‌ها'];
+                $opts = ['activities'=>'کل فعالیت‌ها','calls'=>'تماس‌ها','meetings'=>'جلسات','customers'=>'مشتریان جدید','contacts'=>'مخاطبین','tasks'=>'فرصت‌های فروش'];
                 foreach ($opts as $v => $l): ?>
                 <option value="<?= $v ?>" <?= $chart_type === $v ? 'selected' : '' ?>><?= $l ?></option>
                 <?php endforeach; ?>
@@ -128,7 +128,7 @@ $done_rate = $sum_tasks > 0 ? round($sum_done / $sum_tasks * 100) : 0;
     <div class="kpi-card">
         <div class="kpi-icon" style="background:#e6f4ea">✅</div>
         <div class="kpi-val" style="color:#34a853"><?= $sum_done ?></div>
-        <div class="kpi-label">تسک انجام‌شده</div>
+        <div class="kpi-label">فرصت فروش انجام‌شده</div>
         <div class="kpi-accent" style="background:#34a853;opacity:.2"></div>
     </div>
     <div class="kpi-card">
@@ -253,7 +253,7 @@ $done_rate = $sum_tasks > 0 ? round($sum_done / $sum_tasks * 100) : 0;
                 ['l'=>'کل فعالیت','v'=>$detail_user['total_activities']??0,'c'=>'#00897b','bg'=>'#e0f2f1'],
                 ['l'=>'مشتری','v'=>$detail_user['customers']??0,'c'=>'#d93025','bg'=>'#fce8e6'],
                 ['l'=>'مخاطب','v'=>$detail_user['contacts']??0,'c'=>'#1a73e8','bg'=>'#e8f0fe'],
-                ['l'=>'تسک','v'=>$detail_user['tasks']??0,'c'=>'#f5a623','bg'=>'#fff8e1'],
+                ['l'=>'فرصت فروش','v'=>$detail_user['tasks']??0,'c'=>'#f5a623','bg'=>'#fff8e1'],
                 ['l'=>'تکمیل','v'=>$detail_user['completed']??0,'c'=>'#34a853','bg'=>'#e6f4ea'],
             ];
             foreach ($dkpis as $k): ?>

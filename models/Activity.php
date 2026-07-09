@@ -4,21 +4,40 @@
 class Activity {
 
     /**
-     * گرفتن لیست شناسه کاربرانی که $user_id باید آن‌ها را ببیند (برای manager/admin/super_admin).
+     * زیردرخت کاربر (خودش + همه‌ی زیرمجموعه‌های مستقیم/غیرمستقیمش) —
+     * برای فیلتر کردن تسک‌ها و فعالیت‌ها استفاده می‌شود.
      *
-     * نکته مهم — این رفع یک باگ ساختاری است:
-     * نسخه قبلی فقط زیرمجموعه‌های «مستقیم» (parent_id = $user_id) را می‌دید.
-     * یعنی اگر سلسله‌مراتب ۲ سطح یا بیشتر بود (مثلاً admin → manager → agent)،
-     * ادمین تسک/فعالیت/مشتری agentهایی که زیرمجموعه مستقیمش نبودند (بلکه
-     * زیرمجموعه یک manager زیر او بودند) را اصلاً نمی‌دید.
-     * اینجا از همان روش crm_get_company_root + crm_get_company_members استفاده
-     * می‌شود که مدل‌های Customer و Task از قبل به‌درستی استفاده می‌کردند —
-     * یعنی بر اساس company_name، نه فقط یک سطح parent_id.
+     * قانون: هر کاربر چیزهای خودش رو می‌بینه؛ «پرنت» علاوه بر خودش،
+     * هر چیزی که زیرمجموعه‌هاش (فرزندانش) قابل دیدنه رو هم می‌بینه.
+     * این دسترسی جانبی بین هم‌سطح‌ها (حتی در یک سازمان) نمی‌ده — بر خلاف
+     * مشتری‌ها که سازمانی/company-wide هستند.
      */
     private static function getScopeIds($user_id) {
-        $root_id = crm_get_company_root($user_id);
-        $member_ids = crm_get_company_members($root_id);
-        return !empty($member_ids) ? $member_ids : [(int)$user_id];
+        return crm_get_subtree_ids($user_id);
+    }
+
+    /**
+     * همه‌ی اعضای سازمانِ کاربر (بر اساس company_id) — فقط برای فیلتر
+     * کردن چیزهای «company-wide» مثل لیست/تعداد مشتریان استفاده می‌شود؛
+     * تسک‌ها و فعالیت‌ها باید از getScopeIds (زیردرخت سلسله‌مراتبی) استفاده کنند.
+     */
+    private static function getCompanyScopeIds($user_id) {
+        $pdo = getDB();
+        $stmt = $pdo->prepare("SELECT company_id, role FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $row = $stmt->fetch();
+
+        if (!$row) return [(int)$user_id];
+        if (($row['role'] ?? '') === 'super_admin') {
+            $stmt = $pdo->query("SELECT id FROM users");
+            return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+        }
+        if (empty($row['company_id'])) return [(int)$user_id];
+
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE company_id = ?");
+        $stmt->execute([$row['company_id']]);
+        $ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+        return !empty($ids) ? $ids : [(int)$user_id];
     }
 
     private static function inClause(array $ids) {
@@ -146,17 +165,11 @@ class Activity {
     public static function getTotalCustomers($user_id, $is_manager = false) {
         $pdo = getDB();
 
-        if ($is_manager) {
-            $ids = self::getScopeIds($user_id);
-            $in  = self::inClause($ids);
-            $sql = "SELECT COUNT(*) FROM customers WHERE user_id IN ($in)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($ids);
-        } else {
-            $sql = "SELECT COUNT(*) FROM customers WHERE user_id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$user_id]);
-        }
+        $ids = self::getCompanyScopeIds($user_id);
+        $in  = self::inClause($ids);
+        $sql = "SELECT COUNT(*) FROM customers WHERE user_id IN ($in)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($ids);
 
         return $stmt->fetchColumn();
     }
@@ -312,21 +325,13 @@ class Activity {
     public static function getCustomersForDropdown($user_id, $is_manager = false) {
         $pdo = getDB();
 
-        if ($is_manager) {
-            $ids = self::getScopeIds($user_id);
-            $in  = self::inClause($ids);
-            $stmt = $pdo->prepare("SELECT id, company_name FROM customers 
-                                WHERE user_id IN ($in) 
-                                AND status = 'active'
-                                ORDER BY company_name ASC");
-            $stmt->execute($ids);
-        } else {
-            $stmt = $pdo->prepare("SELECT id, company_name FROM customers 
-                                WHERE user_id = ? 
-                                AND status = 'active'
-                                ORDER BY company_name ASC");
-            $stmt->execute([$user_id]);
-        }
+        $ids = self::getCompanyScopeIds($user_id);
+        $in  = self::inClause($ids);
+        $stmt = $pdo->prepare("SELECT id, company_name FROM customers 
+                            WHERE user_id IN ($in) 
+                            AND status = 'active'
+                            ORDER BY company_name ASC");
+        $stmt->execute($ids);
 
         return $stmt->fetchAll();
     }

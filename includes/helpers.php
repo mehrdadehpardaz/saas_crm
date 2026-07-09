@@ -161,9 +161,14 @@ function crm_get_company_members($root_id) {
 
 /**
  * بررسی می‌کند که آیا کاربر فعلی (یا کاربر مشخص‌شده) اجازه دسترسی
- * به یک مشتری خاص را دارد یا نه — بر اساس عضویت در همان شرکت.
- * این تابع باید قبل از هر عملیات update/delete/view روی منابعی که
- * به customer_id وصل هستند (activities, tasks, contacts) صدا زده شود.
+ * به یک مشتری خاص را دارد یا نه.
+ *
+ * قانون: هر کاربری که company_id‌اش با company_id همان مشتری یکسان باشد،
+ * به آن مشتری در صفحه‌ی مشتریان دسترسی دارد (بدون توجه به سلسله‌مراتب —
+ * یعنی همه‌ی اعضای یک سازمان، همه‌ی مشتریان همان سازمان را می‌بینند).
+ * این ساده‌ترین و مطمئن‌ترین راهه، چون مستقیم از روی ستون company_id
+ * (نه رشته‌ی company_name و نه دنبال کردن زنجیره‌ی parent_id) مقایسه
+ * می‌شود.
  */
 function crm_user_can_access_customer($customer_id, $user = null) {
     $user = $user ?: crm_get_current_user();
@@ -171,14 +176,16 @@ function crm_user_can_access_customer($customer_id, $user = null) {
     if ($user['role'] === 'super_admin') return true;
 
     $pdo = getDB();
-    $stmt = $pdo->prepare("SELECT user_id FROM customers WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT company_id FROM customers WHERE id = ?");
     $stmt->execute([(int)$customer_id]);
-    $owner_id = $stmt->fetchColumn();
-    if ($owner_id === false) return false;
+    $customer_company_id = $stmt->fetchColumn();
+    if ($customer_company_id === false) return false;
 
-    $root_id    = crm_get_company_root($user['id']);
-    $member_ids = crm_get_company_members($root_id);
-    return in_array((int)$owner_id, $member_ids);
+    // اگر company_id یکی از دو طرف مشخص نیست (داده‌ی خیلی قدیمی، قبل از
+    // مهاجرت جدول companies)، محافظه‌کارانه دسترسی رد می‌شود.
+    if (empty($user['company_id']) || empty($customer_company_id)) return false;
+
+    return (int)$user['company_id'] === (int)$customer_company_id;
 }
 
 /**
@@ -193,36 +200,118 @@ function crm_require_customer_access($customer_id, $user = null) {
 }
 
 /**
- * بررسی دسترسی به یک تسک با استفاده از customer_id آن.
+ * آیا $ancestor_id یکی از «والدین» (مستقیم یا غیرمستقیم) $descendant_id
+ * هست؟ یعنی با دنبال کردن زنجیره‌ی parent_id از $descendant_id به بالا،
+ * در نهایت به $ancestor_id می‌رسیم؟ (خودِ فرد «والد خودش» حساب نمی‌شود —
+ * آن را جدا چک کنید.)
+ */
+function crm_is_ancestor_of($ancestor_id, $descendant_id) {
+    if (empty($ancestor_id) || empty($descendant_id)) return false;
+
+    $pdo = getDB();
+    $current_id = $descendant_id;
+    for ($i = 0; $i < 10; $i++) {
+        $stmt = $pdo->prepare("SELECT parent_id FROM users WHERE id = ?");
+        $stmt->execute([$current_id]);
+        $parent_id = $stmt->fetchColumn();
+        if (!$parent_id) return false;
+        if ((int)$parent_id === (int)$ancestor_id) return true;
+        $current_id = $parent_id;
+    }
+    return false;
+}
+
+/**
+ * زیردرخت کامل یک کاربر: خودش + همه‌ی زیرمجموعه‌های مستقیم و غیرمستقیمش
+ * (بر اساس parent_id، بدون محدودیت عمق ثابت). برای فیلتر کردن لیست‌ها
+ * (تسک‌ها، فعالیت‌ها، مخاطبین) استفاده می‌شود: «من + هر کسی که من مدیرشم».
+ */
+function crm_get_subtree_ids($user_id) {
+    $ids = [(int)$user_id];
+    $frontier = [(int)$user_id];
+    $pdo = getDB();
+
+    for ($depth = 0; $depth < 10 && !empty($frontier); $depth++) {
+        $in = implode(',', array_fill(0, count($frontier), '?'));
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE parent_id IN ($in)");
+        $stmt->execute($frontier);
+        $children = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
+        $new_ids = array_values(array_diff($children, $ids));
+        if (empty($new_ids)) break;
+
+        $ids = array_merge($ids, $new_ids);
+        $frontier = $new_ids;
+    }
+
+    return $ids;
+}
+
+/**
+ * بررسی دسترسی به یک رکورد «مالکیت‌دار» (تسک، فعالیت یا مخاطب) که
+ * توسط $creator_user_id ساخته شده.
+ *
+ * قانون: هر کاربر به چیزهایی که خودش ساخته (user_id خودش) کامل دسترسی
+ * داره. علاوه بر این، «پرنت» (والدِ مستقیم یا غیرمستقیمِ سازنده، طبق
+ * زنجیره‌ی parent_id) هم به همان اندازه‌ی خودِ سازنده دسترسی کامل داره —
+ * یعنی مدیر همه‌چیزِ زیرمجموعه‌هاش رو می‌بینه، علاوه بر چیزهای خودش.
+ * دسترسی جانبی (بین دو نفر هم‌سطح که والدِ هم نیستن) وجود ندارد، حتی اگر
+ * هر دو عضو یک سازمان باشند.
+ */
+function crm_user_can_access_owned_record($creator_user_id, $user = null) {
+    $user = $user ?: crm_get_current_user();
+    if (!$user || empty($creator_user_id)) return false;
+    if ($user['role'] === 'super_admin') return true;
+    if ((int)$user['id'] === (int)$creator_user_id) return true;
+
+    return crm_is_ancestor_of($user['id'], $creator_user_id);
+}
+
+/**
+ * مثل crm_user_can_access_owned_record ولی در صورت نداشتن دسترسی
+ * مستقیماً درخواست را با خطای ۴۰۳ متوقف می‌کند.
+ */
+function crm_require_owned_record_access($creator_user_id, $message = '⛔ شما به این مورد دسترسی ندارید.') {
+    if (!crm_user_can_access_owned_record($creator_user_id)) {
+        http_response_code(403);
+        die('<div class="alert alert-error">' . $message . '</div>');
+    }
+}
+
+/**
+ * بررسی دسترسی به یک تسک — بر اساس سازنده‌ی خودِ تسک (user_id تسک)،
+ * نه بر اساس مشتریِ صاحبِ آن. طبق قانون: سازنده + هر «پرنت» بالادستیِ
+ * سازنده دسترسی کامل دارند.
  */
 function crm_require_task_access($task) {
     if (!$task) {
         http_response_code(404);
         die('<div class="alert alert-error">⛔ تسک یافت نشد.</div>');
     }
-    crm_require_customer_access($task['customer_id']);
+    crm_require_owned_record_access($task['user_id'], '⛔ شما به این تسک دسترسی ندارید.');
 }
 
 /**
- * بررسی دسترسی به یک فعالیت با استفاده از customer_id آن.
+ * بررسی دسترسی به یک فعالیت — بر اساس سازنده‌ی خودِ فعالیت (user_id).
  */
 function crm_require_activity_access($activity) {
     if (!$activity) {
         http_response_code(404);
         die('<div class="alert alert-error">⛔ فعالیت یافت نشد.</div>');
     }
-    crm_require_customer_access($activity['customer_id']);
+    crm_require_owned_record_access($activity['user_id'], '⛔ شما به این فعالیت دسترسی ندارید.');
 }
 
 /**
- * بررسی دسترسی به یک مخاطب با استفاده از customer_id آن.
+ * بررسی دسترسی به یک مخاطب — بر اساس سازنده‌ی خودِ مخاطب (user_id مخاطب)،
+ * نه بر اساس مشتریِ صاحبِ آن.
  */
 function crm_require_contact_access($contact) {
     if (!$contact) {
         http_response_code(404);
         die('<div class="alert alert-error">⛔ مخاطب یافت نشد.</div>');
     }
-    crm_require_customer_access($contact['customer_id']);
+    crm_require_owned_record_access($contact['user_id'] ?? null, '⛔ شما به این مخاطب دسترسی ندارید.');
 }
 
 function crm_is_super_admin() {

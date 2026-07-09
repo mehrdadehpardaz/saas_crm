@@ -9,6 +9,7 @@ require_once __DIR__ . '/../models/Task.php';
 $user = crm_get_current_user();
 $is_manager = in_array($user['role'], ['super_admin', 'admin', 'manager']);
 $is_super = ($user['role'] === 'super_admin');
+$is_admin = in_array($user['role'], ['super_admin', 'admin']);
 $action = $_GET['action'] ?? 'list';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 $task_id = isset($_GET['task_id']) ? (int)$_GET['task_id'] : null;
@@ -114,6 +115,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     if ($action === 'delete' && $id) {
+        if (!$is_admin) {
+            http_response_code(403);
+            die('<div class="alert alert-error">⛔ حذف فقط برای مدیران امکان‌پذیر است.</div>');
+        }
         $existing_activity = Activity::getById($id);
         crm_require_activity_access($existing_activity);
 
