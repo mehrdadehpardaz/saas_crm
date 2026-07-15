@@ -39,14 +39,14 @@ $open_login_modal = !empty($login_error) || (($_GET['action'] ?? '') === 'login'
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>پیگیر — نرم‌افزار مدیریت ارتباط با مشتری برای کسب‌وکارهای کوچک</title>
-<meta name="description" content="پیگیر، CRM ساده و فارسی برای تیم‌های فروش کوچک. مشتری بساز، براش فرصت فروش تعریف کن، فعالیت‌ها رو زیرش ثبت کن — هیچ فالوآپی رو از دست نده. ۱۴ روز رایگان.">
-<meta name="keywords" content="نرم افزار CRM, مدیریت مشتری, پیگیری فروش, نرم افزار فروش, سی آر ام فارسی, مدیریت فرصت فروش">
+<title>پیگیریو — نرم‌افزار مدیریت ارتباط با مشتری برای کسب‌وکارهای کوچک</title>
+<meta name="description" content="پیگیریو، CRM ساده و فارسی برای تیم‌های فروش کوچک. مشتری بساز، براش فرصت فروش تعریف کن، فعالیت‌ها رو زیرش ثبت کن — هیچ فالوآپی رو از دست نده. ۱۴ روز رایگان.">
+<meta name="keywords" content="نرم افزار CRM, مدیریت مشتری, پیگیریوی فروش, نرم افزار فروش, سی آر ام فارسی, مدیریت فرصت فروش">
 <link rel="canonical" href="https://paygiro.ir/">
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="پیگیر — هیچ مشتری‌ای رو فراموش نکن">
+<meta property="og:title" content="پیگیریو — هیچ مشتری‌ای رو فراموش نکن">
 <meta property="og:description" content="CRM ساده فارسی برای تیم‌های فروش کوچک. ۱۴ روز رایگان، بدون نیاز به کارت بانکی.">
 <meta property="og:url" content="https://paygiro.ir/">
 <meta property="og:locale" content="fa_IR">
@@ -56,7 +56,7 @@ $open_login_modal = !empty($login_error) || (($_GET['action'] ?? '') === 'login'
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="پیگیر — هیچ مشتری‌ای رو فراموش نکن">
+<meta name="twitter:title" content="پیگیریو — هیچ مشتری‌ای رو فراموش نکن">
 <meta name="twitter:description" content="CRM ساده فارسی برای تیم‌های فروش کوچک. ۱۴ روز رایگان، بدون نیاز به کارت بانکی.">
 <meta name="twitter:image" content="https://paygiro.ir/assets/img/og-cover.png">
 
@@ -65,7 +65,7 @@ $open_login_modal = !empty($login_error) || (($_GET['action'] ?? '') === 'login'
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "پیگیر",
+  "name": "پیگیریو",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "description": "نرم‌افزار مدیریت ارتباط با مشتری (CRM) فارسی برای کسب‌وکارهای کوچک",
@@ -516,7 +516,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
   <div class="container nav-inner">
     <a href="#" class="nav-logo">
       <span class="nav-logo-mark">پ</span>
-      پیگیر
+      پیگیریو
     </a>
     <nav class="nav-links">
       <a href="#flow">چطور کار می‌کنه</a>
@@ -542,7 +542,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
     <div>
       <div class="eyebrow"><span class="eyebrow-dot"></span> ۱۴ روز رایگان، بدون نیاز به کارت بانکی</div>
       <h1>مشتری بساز، فرصت فروش بذار،<br><em>فعالیت رو پیگیری کن</em></h1>
-      <p class="hero-sub">پیگیر، CRM ساده فارسیه که یک منطق روشن داره: اول مشتری رو ثبت می‌کنی، براش یک فرصت فروش (هدف مشخص) تعریف می‌کنی، و هر تماس یا جلسه رو به‌عنوان فعالیت زیر همون فرصت فروش می‌نویسی — تا وقتی به نتیجه برسه.</p>
+      <p class="hero-sub">پیگیریو، CRM ساده فارسیه که یک منطق روشن داره: اول مشتری رو ثبت می‌کنی، براش یک فرصت فروش (هدف مشخص) تعریف می‌کنی، و هر تماس یا جلسه رو به‌عنوان فعالیت زیر همون فرصت فروش می‌نویسی — تا وقتی به نتیجه برسه.</p>
       <div class="hero-ctas">
         <?php if ($is_logged_in): ?>
             <a href="index.php?page=dashboard" class="btn btn-primary btn-lg">رفتن به داشبورد</a>
@@ -551,7 +551,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
         <?php endif; ?>
             <a href="#flow" class="btn btn-ghost btn-lg">ببین چطور کار می‌کنه</a>
         </div>
-      <div class="hero-trust">⭐️⭐️⭐️⭐️⭐️ <b>+200 تیم فروش</b> همین الان از پیگیر استفاده می‌کنن</div>
+      <div class="hero-trust">⭐️⭐️⭐️⭐️⭐️ <b>+200 تیم فروش</b> همین الان از پیگیریو استفاده می‌کنن</div>
     </div>
 
     <div class="hero-visual reveal">
@@ -628,9 +628,9 @@ a:focus-visible,button:focus-visible,input:focus-visible{
 <section class="section flow-section" id="flow">
   <div class="container">
     <div class="section-head reveal">
-      <div class="section-eyebrow">منطق کار با پیگیر</div>
-      <h2 class="section-title">مشتری → فرصت فروش → فعالیت</h2>
-      <p class="section-desc">یک مسیر ساده و همیشه یکسان — همینه که پیگیر رو ساده نگه می‌داره.</p>
+      <div class="section-eyebrow">منطق کار با پیگیریو</div>
+      <h2 class="section-title">مشتری ← فرصت فروش ← فعالیت</h2>
+      <p class="section-desc">یک مسیر ساده و همیشه یکسان — همینه که پیگیریو رو ساده نگه می‌داره.</p>
     </div>
 
     <div class="flow-mini reveal">
@@ -899,7 +899,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
 <footer class="foot">
   <div class="container foot-inner">
     <div class="foot-logo">
-      <span class="nav-logo-mark">پ</span> پیگیر
+      <span class="nav-logo-mark">پ</span> پیگیریو
     </div>
     <div class="foot-links">
         <a href="#flow">چطور کار می‌کنه</a>
@@ -913,7 +913,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{
             <a href="index.php?page=auth&mode=login">ورود</a>
         <?php endif; ?>
     </div>
-    <div class="foot-copy">© <?= date('Y') ?> پیگیر — تمامی حقوق محفوظ است</div>
+    <div class="foot-copy">© <?= date('Y') ?> پیگیریو — تمامی حقوق محفوظ است</div>
   </div>
 </footer>
 

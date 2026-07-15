@@ -113,6 +113,8 @@ $controller_map = [
     'report'     => 'ReportController',
     'backup'     => 'BackupController',
     'profile'    => 'ProfileController',
+    'support'    => 'SupportController',
+    'ticket'     => 'SupportController',
 ];
 
 $controller_name = $controller_map[$page] ?? null;
@@ -128,7 +130,7 @@ $is_manager = in_array($nav_role, ['super_admin','admin','manager']);
 $is_super  = ($nav_role === 'super_admin');
 
 // صفحاتی که در تب‌بار موبایل اصلی نیستند و باید "بیشتر" را فعال نشان دهند
-$secondary_pages = ['contacts', 'reports', 'users', 'plans', 'backup'];
+$secondary_pages = ['contacts', 'reports', 'users', 'plans', 'backup', 'support', 'profile'];
 $is_on_secondary_page = in_array($page, $secondary_pages);
 ?>
 <!DOCTYPE html>
@@ -140,7 +142,7 @@ $is_on_secondary_page = in_array($page, $secondary_pages);
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="robots" content="noindex, nofollow">
-    <title>پیگیر — CRM پیگیری مشتری</title>
+    <title>پیگیریو — CRM پیگیری مشتری</title>
 
     <!-- فونت: preconnect + لینک مستقیم به‌جای @import (رفع render-blocking) -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -297,6 +299,10 @@ $is_on_secondary_page = in_array($page, $secondary_pages);
     }
     .crm-sb-divider { height: 1px; background: var(--line); margin: 6px 0; }
     .crm-sb-icon { font-size: 17px; width: 24px; text-align: center; flex-shrink: 0; }
+    .crm-sb-badge {
+        margin-right: auto; background: var(--ember); color: #fff; font-size: 10.5px; font-weight: 800;
+        padding: 1px 8px; border-radius: 10px; flex-shrink: 0;
+    }
 
     .crm-sb-foot {
         padding: 10px 14px;
@@ -425,11 +431,21 @@ if ($is_admin) {
         ],
     ];
 }
-// «پروفایل من» برای همه نقش‌ها — همیشه آخرین گروه، جدا از کارهای روزمره فروش
+// «پروفایل من» و «پشتیبانی» برای همه نقش‌ها — همیشه آخرین گروه
+// نکته: badge پشتیبانی برای همه‌ی کاربرها نشون داده می‌شه، نه فقط سوپر
+// ادمین — سوپر ادمین تعداد تیکت‌هایی که پیام خوانده‌نشده دارن رو می‌بینه،
+// و هر کاربر عادی تعداد تیکت‌های خودش که سوپر ادمین بهشون جواب تازه داده رو.
+require_once __DIR__ . '/models/SupportTicket.php';
+$support_badge = $is_super
+    ? SupportTicket::countUnreadForAdmin()
+    : SupportTicket::countUnreadForUser($nav_user['id']);
+if ($support_badge <= 0) $support_badge = null;
+
 $nav_groups[] = [
     'label' => 'حساب کاربری',
     'items' => [
         ['page' => 'profile', 'icon' => '👤', 'label' => 'پروفایل من'],
+        ['page' => 'support', 'icon' => '🎫', 'label' => 'پشتیبانی', 'badge' => $support_badge],
     ],
 ];
 ?>
@@ -438,7 +454,7 @@ $nav_groups[] = [
 <header class="crm-topbar">
     <a href="index.php?page=dashboard" class="crm-topbar-logo">
         <span class="crm-logo-mark" aria-hidden="true">پ</span>
-        پیگیر
+        پیگیریو
     </a>
 </header>
 
@@ -474,6 +490,9 @@ $nav_groups[] = [
                 <a href="<?= $href ?>" class="crm-sb-link <?= $is_active ? 'active' : '' ?>" <?= $is_active ? 'aria-current="page"' : '' ?>>
                     <span class="crm-sb-icon" aria-hidden="true"><?= $item['icon'] ?></span>
                     <?= crm_sanitize($item['label']) ?>
+                    <?php if (!empty($item['badge'])): ?>
+                    <span class="crm-sb-badge"><?= (int)$item['badge'] ?></span>
+                    <?php endif; ?>
                 </a>
                 <?php endforeach; ?>
             </div>

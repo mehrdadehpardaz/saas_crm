@@ -273,7 +273,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--ember);outline-offs
   <div class="container">
     <div class="section-head reveal">
       <div class="section-eyebrow">منطق اصلی کار</div>
-      <h2 class="section-title">مشتری → فرصت فروش → فعالیت</h2>
+      <h2 class="section-title">مشتری ← فرصت فروش ← فعالیت</h2>
       <p class="section-desc">هر فروش موفق همین سه قدم رو داره. پیگیر همین ترتیب رو توی رابط کاربری هم اجرا می‌کنه، تا هیچ‌وقت گیج نشی که «الان باید چیکار کنم».</p>
     </div>
 

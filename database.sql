@@ -228,3 +228,59 @@ ALTER TABLE `contacts`
 
 ALTER TABLE `users`
   ADD COLUMN `deactivated_manually` TINYINT(1) NOT NULL DEFAULT 0 AFTER `status`;
+
+CREATE TABLE IF NOT EXISTS `support_tickets` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `subject` VARCHAR(200) NOT NULL,
+  `message` TEXT NOT NULL,
+  `status` ENUM('open','in_progress','closed') NOT NULL DEFAULT 'open',
+  `admin_reply` TEXT DEFAULT NULL,
+  `replied_at` DATETIME DEFAULT NULL,
+  `replied_by` INT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`replied_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- migration_support_tickets_thread.sql
+-- ارتقای بخش پشتیبانی از «یک پیام + یک پاسخ» به یک گفتگوی چندپیامی:
+-- هم کاربر (صاحب تیکت) و هم سوپر ادمین می‌تونن هرچند بار که لازم بود
+-- پیام رد و بدل کنن. همچنین دو پرچم unread_by_user/unread_by_admin
+-- اضافه می‌شه تا هر دو طرف بتونن ببینن «پیام جدید دارم».
+
+USE crm_saas;
+
+-- ۱) جدول پیام‌های تیکت
+CREATE TABLE IF NOT EXISTS `support_ticket_messages` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `ticket_id` INT NOT NULL,
+  `sender_user_id` INT NOT NULL,
+  `message` TEXT NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`ticket_id`) REFERENCES `support_tickets`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`sender_user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ۲) پرچم‌های «پیام جدید دارم» برای هر طرف
+ALTER TABLE `support_tickets`
+  ADD COLUMN `unread_by_user` TINYINT(1) NOT NULL DEFAULT 0 AFTER `status`,
+  ADD COLUMN `unread_by_admin` TINYINT(1) NOT NULL DEFAULT 1 AFTER `unread_by_user`;
+
+-- ۳) انتقال داده‌های قدیمی (پیام اول کاربر + پاسخ ادمین، اگه بوده) به جدول پیام‌ها
+INSERT INTO support_ticket_messages (ticket_id, sender_user_id, message, created_at)
+SELECT id, user_id, message, created_at FROM support_tickets;
+
+INSERT INTO support_ticket_messages (ticket_id, sender_user_id, message, created_at)
+SELECT id, COALESCE(replied_by, user_id), admin_reply, COALESCE(replied_at, created_at)
+FROM support_tickets
+WHERE admin_reply IS NOT NULL AND admin_reply <> '';
+
+-- تیکت‌هایی که از قبل پاسخ داشتن، یعنی سوپر ادمین قبلاً دیدتشون
+UPDATE support_tickets SET unread_by_admin = 0 WHERE admin_reply IS NOT NULL AND admin_reply <> '';
+
+-- نکته: ستون‌های قدیمی message / admin_reply / replied_at / replied_by
+-- عمداً حذف نشدن (برای احتیاط و امکان رول‌بک) ولی از این به بعد کد
+-- دیگه ازشون استفاده نمی‌کنه — هر وقت مطمئن بودید همه‌چی درسته،
+-- می‌تونید با یک ALTER TABLE جداگونه دراپشون کنید.
