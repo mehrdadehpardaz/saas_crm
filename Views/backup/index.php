@@ -88,7 +88,9 @@
 </style>
 
 <div class="bk-wrap">
-
+<?php if (!empty($_GET['limit_reached'])): ?>
+    <?= crm_render_upgrade_box('در پلن فعلی شما فقط یک بکاپ رایگان در ماه مجاز است.') ?>
+<?php endif; ?>
 <!-- Header -->
 <div class="bk-header">
     <div>

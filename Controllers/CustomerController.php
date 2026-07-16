@@ -30,6 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($company_name)) {
             $error = 'نام شرکت الزامی است.';
+        } elseif ($limit_box = crm_require_plan_limit('customers')) {
+            $error = $limit_box;
         } else {
             $data = [
                 'user_id' => $user['id'],
@@ -53,6 +55,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'خطا در ثبت مشتری. لطفاً دوباره تلاش کنید.';
             }
         }
+
+        // اگر همینجا به خطا خوردیم (اعتبارسنجی، سقف پلن یا خطای ساخت)،
+        // باید همون فرمِ «مشتری جدید» با پیام خطا دوباره نمایش داده بشه —
+        // نه این‌که ساکت به لیست مشتریان بریم و پیام گم بشه.
+        if (!empty($error)) {
+            $customer = null;
+            $primary_contact = null;
+            include __DIR__ . '/../Views/customers/form.php';
+            exit;
+        }
     }
     
     // آپدیت مشتری
@@ -69,6 +81,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($company_name)) {
             $error = 'نام شرکت الزامی است.';
+            $customer = Customer::getById($id);
+            $primary_contact = Customer::getPrimaryContact($id);
+            include __DIR__ . '/../Views/customers/form.php';
+            exit;
         } else {
             $data = [
                 'industry_id' => !empty($industry_id) ? $industry_id : null,
@@ -87,6 +103,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             } else {
                 $error = 'خطا در بروزرسانی.';
+                $customer = Customer::getById($id);
+                $primary_contact = Customer::getPrimaryContact($id);
+                include __DIR__ . '/../Views/customers/form.php';
+                exit;
             }
         }
     }

@@ -115,7 +115,11 @@ $has_extra_values = !empty($customer['industry_title']) || !empty($customer['ema
 </div>
 
 <?php if ($error): ?>
-    <div class="cf-alert-error"><?= $error ?></div>
+    <?php if (strpos($error, 'crm-upgrade-box') !== false): ?>
+        <?= $error ?>
+    <?php else: ?>
+        <div class="cf-alert-error"><?= $error ?></div>
+    <?php endif; ?>
 <?php endif; ?>
 
 <form method="POST" action="index.php?page=customers&action=<?= $is_edit ? 'update&id='.$customer_id : 'create' ?>" class="cf-form">

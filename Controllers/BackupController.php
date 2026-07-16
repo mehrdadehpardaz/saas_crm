@@ -72,6 +72,15 @@ ob_end_flush();
 
 function _backup_export_excel(PDO $pdo, array $user, bool $is_super): void
 {
+    if (!$is_super) {
+        $backup_check = crm_check_backup_allowed($user);
+        if (!$backup_check['ok']) {
+            while (ob_get_level() > 0) { ob_end_clean(); }
+            header('Location: index.php?page=backup&limit_reached=1');
+            exit;
+        }
+    }
+
     // ── تعیین محدوده داده ──
     $company = $user['company_name'];
 
@@ -144,7 +153,9 @@ function _backup_export_excel(PDO $pdo, array $user, bool $is_super): void
         "SELECT id, title, created_at FROM industries ORDER BY title"
     )->fetchAll(PDO::FETCH_ASSOC);
 
-    // ── ساخت فایل اکسل با PHP순수 (بدون کتابخانه خارجی) ──
+    if (!$is_super) {
+        crm_log_backup_usage($user, 'excel');
+    }
     _write_xlsx($sheets, $is_super ? 'backup_full' : 'backup_' . preg_replace('/[^a-z0-9]/i', '_', $company));
 }
 

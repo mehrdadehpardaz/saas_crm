@@ -49,6 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'رمز عبور حداقل ۶ کاراکتر.';
         } elseif (empty($full_name)) {
             $error = 'نام و نام خانوادگی الزامی است.';
+        } elseif (!$is_super && ($limit_box = crm_require_plan_limit('users'))) {
+            $error = $limit_box;
         } else {
             $pdo = getDB();
             
@@ -88,7 +90,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-    }
+        // اگر تا اینجا با خطا مواجه شدیم (اعتبارسنجی، شماره تکراری یا سقف
+            // پلن) و هنوز exit نشده، فرمِ «کاربر جدید» را با پیام خطا دوباره
+            // نشان می‌دهیم — نه این‌که ساکت به لیست کاربران ریدایرکت شویم.
+            if (!empty($error)) {
+                include __DIR__ . '/../Views/users/form.php';
+                exit;
+            }
+        }
     
     // ویرایش کاربر
     if ($action === 'update' && $id) {

@@ -53,7 +53,11 @@ $is_super = crm_is_super_admin();
 </div>
 
 <?php if ($error): ?>
-    <div class="uf-alert-error"><?= $error ?></div>
+    <?php if (strpos($error, 'crm-upgrade-box') !== false): ?>
+        <?= $error ?>
+    <?php else: ?>
+        <div class="cf-alert-error"><?= $error ?></div>
+    <?php endif; ?>
 <?php endif; ?>
 
 <form method="POST" action="index.php?page=users&action=<?= $is_edit ? 'update&id='.$id : 'create' ?>" class="uf-form">

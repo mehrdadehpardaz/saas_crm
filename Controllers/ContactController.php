@@ -30,6 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'مشتری مشخص نشده.';
         } elseif (!crm_user_can_access_customer($customer_id_post)) {
             $error = '⛔ شما به این مشتری دسترسی ندارید.';
+        } elseif ($limit_box = crm_require_plan_limit('contacts')) {
+            $error = $limit_box;
         } else {
             $pdo = getDB();
             
@@ -47,6 +49,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$customer_id_post, $user['id'], $company_id, $full_name, $position, $phone, $email, $is_primary]);
             
             header('Location: index.php?page=customers&action=view&id=' . $customer_id_post . '&msg=contact_added');
+            exit;
+        }
+
+        // اگر خطا خوردیم (اعتبارسنجی، دسترسی یا سقف پلن)، فرمِ «مخاطب جدید»
+        // با پیام خطا دوباره نمایش داده می‌شود — نه ریدایرکت ساکت.
+        if (!empty($error)) {
+            $is_edit = false;
+            $contact = null;
+            $customer_id = $customer_id_post ?: $customer_id;
+            $customer = $customer_id ? Customer::getById($customer_id) : null;
+            if (!$customer) {
+                echo '<div class="alert alert-error">مشتری یافت نشد.</div>';
+                echo '<a href="index.php?page=customers" class="btn">بازگشت</a>';
+                exit;
+            }
+            include __DIR__ . '/../Views/contacts/form.php';
             exit;
         }
     }
@@ -83,6 +101,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Location: index.php?page=customers&action=view&id=' . $contact['customer_id'] . '&msg=contact_updated');
                 exit;
             }
+        }
+
+        if (!empty($error)) {
+            $is_edit = true;
+            $pdo = getDB();
+            $stmt = $pdo->prepare("SELECT * FROM contacts WHERE id = ?");
+            $stmt->execute([$id]);
+            $contact = $stmt->fetch();
+            if (!$contact) {
+                echo '<div class="alert alert-error">مخاطب یافت نشد.</div>';
+                exit;
+            }
+            $customer_id = $contact['customer_id'];
+            $customer = Customer::getById($customer_id);
+            include __DIR__ . '/../Views/contacts/form.php';
+            exit;
         }
     }
 }

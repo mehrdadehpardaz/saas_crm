@@ -88,7 +88,11 @@
 </div>
 
 <?php if ($error): ?>
-    <div class="ctf-alert-error"><?= $error ?></div>
+    <?php if (strpos($error, 'crm-upgrade-box') !== false): ?>
+        <?= $error ?>
+    <?php else: ?>
+        <div class="cf-alert-error"><?= $error ?></div>
+    <?php endif; ?>
 <?php endif; ?>
 
 <form method="POST" action="index.php?page=contacts&action=<?= $is_edit ? 'update&id='.$id : 'create' ?>" class="ctf-form">

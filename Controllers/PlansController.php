@@ -1,8 +1,9 @@
 <?php
 // controllers/PlansController.php
+// نسخه‌ی جدید — سه تعرفه‌ی ثابت (plan_tiers) به‌جای مدل «پایه + هر کاربر».
 ob_start();
 
-require_once __DIR__ . '/../models/Plan.php';
+require_once __DIR__ . '/../models/PlanTier.php';
 
 $user = crm_get_current_user();
 if (!in_array($user['role'], ['super_admin', 'admin'])) {
@@ -18,180 +19,79 @@ $error = '';
 // ========== POST ==========
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     crm_csrf_verify();
-    if ($action === 'buy') {
-        $user_count = (int)($_POST['user_count'] ?? 1);
-        $period = $_POST['period'] ?? 'monthly';
-        $mode = $_POST['mode'] ?? 'full'; // full, upgrade, renew
-        
-        $pdo = getDB();
-        $current_max = (int)$user['max_users_limit'];
-        $current_expiry = strtotime($user['plan_expiry']);
-        $now = time();
-        $is_active = $current_expiry > $now && ($user['status'] ?? 'active') === 'active';
-        $company = $user['company_name'] ?? '';
-        
-        if ($mode === 'upgrade') {
-            // فقط کاربر اضافه برای مدت باقی‌مانده
-            if ($user_count <= $current_max) {
-                $error = 'تعداد کاربران باید بیشتر از سقف فعلی باشد.';
-            } else {
-                $months_left = ceil(($current_expiry - $now) / (30 * 24 * 3600));
-                if ($months_left < 1) $months_left = 1;
-                
-                $extra = $user_count - $current_max;
-                $perM = (int)Plan::getByType('per_user')['price_monthly'];
-                $price = $extra * $perM * $months_left;
-                $max_users = $user_count;
-                
-                // آپدیت admin
-                $pdo->prepare("UPDATE users SET max_users_limit = ?, credit = credit + ? WHERE id = ?")
-                    ->execute([$max_users, $price, $user['id']]);
-                
-                // فعال کردن زیرمجموعه‌ها بر اساس سقف جدید
-                if (!empty($company)) {
-                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE company_name = ? AND status = 'active' AND id != ?");
-                    $stmt->execute([$company, $user['id']]);
-                    $active = $stmt->fetchColumn();
-                    
-                    $slots = $max_users - $active;
-                    
-                    if ($slots > 0) {
-                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'manager' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
-                        $stmt->execute([$company, $company, $slots]);
-                        $slots -= $stmt->rowCount();
-                    }
-                    
-                    if ($slots > 0) {
-                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'agent' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
-                        $stmt->execute([$company, $company, $slots]);
-                    }
-                }
-            }
-        }
-        elseif ($mode === 'renew') {
-            // تمدید
-            if ($user_count < $current_max) {
-                $error = 'تعداد کاربران نمیتواند کمتر از سقف فعلی باشد.';
-            } else {
-                $days = ($period === 'yearly') ? 365 : 30;
-                
-                // هزینه تمدید با تعداد جدید
-                $price_full = Plan::calculatePrice($user_count, $period);
-                
-                if ($user_count > $current_max) {
-                    // تمدید + کاربر اضافه
-                    $months_left = ceil(($current_expiry - $now) / (30 * 24 * 3600));
-                    if ($months_left < 1) $months_left = 1;
-                    
-                    $extra = $user_count - $current_max;
-                    $perM = (int)Plan::getByType('per_user')['price_monthly'];
-                    $price = $price_full + ($extra * $perM * $months_left);
-                } else {
-                    $price = $price_full;
-                }
-                $max_users = $user_count;
-                
-                // آپدیت admin
-                $pdo->prepare("UPDATE users SET plan_type = ?, max_users_limit = ?, credit = credit + ?, plan_expiry = DATE_ADD(plan_expiry, INTERVAL ? DAY), status = 'active' WHERE id = ?")
-                    ->execute([$period, $max_users, $price, $days, $user['id']]);
-                
-                // فعال کردن زیرمجموعه‌ها بر اساس سقف جدید
-                if (!empty($company)) {
-                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE company_name = ? AND status = 'active' AND id != ?");
-                    $stmt->execute([$company, $user['id']]);
-                    $active = $stmt->fetchColumn();
-                    
-                    $slots = $max_users - $active;
-                    
-                    if ($slots > 0) {
-                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'manager' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
-                        $stmt->execute([$company, $company, $slots]);
-                        $slots -= $stmt->rowCount();
-                    }
-                    
-                    if ($slots > 0) {
-                        $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'agent' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
-                        $stmt->execute([$company, $company, $slots]);
-                    }
-                }
-            }
-        }
-        else {
-            // خرید کامل (منقضی شده)
-            $price = Plan::calculatePrice($user_count, $period);
-            $max_users = $user_count;
+
+    // خرید / ارتقای پلن — انتخاب یکی از سه تعرفه‌ی ثابت
+    if ($action === 'select') {
+        $tier_id = (int)($_POST['tier_id'] ?? 0);
+        $period  = ($_POST['period'] ?? 'monthly') === 'yearly' ? 'yearly' : 'monthly';
+        $tier = PlanTier::getById($tier_id);
+
+        if (!$tier) {
+            $error = 'پلن انتخابی معتبر نیست.';
+        } else {
+            $pdo = getDB();
             $days = ($period === 'yearly') ? 365 : 30;
-            
-            // آپدیت admin
-            $pdo->prepare("UPDATE users SET plan_type = ?, max_users_limit = ?, credit = credit + ?, plan_expiry = DATE_ADD(NOW(), INTERVAL ? DAY), status = 'active' WHERE id = ?")
-                ->execute([$period, $max_users, $price, $days, $user['id']]);
-            
-            // فعال کردن زیرمجموعه‌ها بر اساس سقف جدید
-            if (!empty($company)) {
-                $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE company_name = ? AND status = 'active' AND id != ?");
-                $stmt->execute([$company, $user['id']]);
-                $active = $stmt->fetchColumn();
-                
-                $slots = $max_users - $active;
-                
-                if ($slots > 0) {
-                    $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'manager' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
-                    $stmt->execute([$company, $company, $slots]);
-                    $slots -= $stmt->rowCount();
-                }
-                
-                if ($slots > 0) {
-                    $stmt = $pdo->prepare("UPDATE users SET status = 'active', plan_expiry = (SELECT plan_expiry FROM users WHERE company_name = ? AND role = 'admin' LIMIT 1) WHERE company_name = ? AND role = 'agent' AND status = 'inactive' AND deactivated_manually = 0 AND (parent_id IS NULL OR parent_id IN (SELECT id FROM users WHERE status = 'active')) ORDER BY created_at DESC LIMIT ?");
-                    $stmt->execute([$company, $company, $slots]);
-                }
-            }
-        }
-        
-        // آپدیت company_name اگر وارد شده
-        if (!empty($_POST['company_name'])) {
-            $cn = crm_sanitize($_POST['company_name']);
-            $pdo->prepare("UPDATE users SET company_name = ? WHERE id = ?")->execute([$cn, $user['id']]);
-        }
-        
-        if (empty($error)) {
-            // رفرش session
-            $_SESSION['user_id'] = $user['id'];
+            // سالانه = ۱۰ برابر ماهانه (معادل ۲ ماه رایگان) — هماهنگ با بقیه پروژه
+            $price = ($period === 'yearly') ? $tier['price_monthly'] * 10 : $tier['price_monthly'];
+
+            // سقف کاربرانِ ستون قدیمی max_users_limit (که بقیه‌ی سیستم — مثلاً
+            // فعال/غیرفعال‌سازی خودکار در index.php — به آن وابسته است) با
+            // سقف تعرفه هماهنگ می‌شود. برای تعرفه‌ی نامحدود عدد بزرگ می‌گذاریم
+            // چون آن ستون NOT NULL است.
+            $new_max_users = $tier['max_users'] !== null ? (int)$tier['max_users'] : 999999;
+
+            $stmt = $pdo->prepare("UPDATE users
+                SET plan_tier_id = ?, max_users_limit = ?, credit = credit + ?,
+                    plan_expiry = DATE_ADD(GREATEST(plan_expiry, NOW()), INTERVAL ? DAY),
+                    status = 'active'
+                WHERE id = ?");
+            $stmt->execute([$tier['id'], $new_max_users, $price, $days, $user['id']]);
+
+            $_SESSION['user_id'] = $user['id']; // رفرش session
             header('Location: index.php?page=plans&msg=purchased');
             exit;
         }
+    }
+
+    // ویرایش تعرفه‌ها — فقط سوپر ادمین (اعداد قابل‌تغییر)
+    if ($action === 'update_tier' && $is_super) {
+        $tid = (int)($_POST['id'] ?? 0);
+        if ($tid) {
+            PlanTier::update($tid, [
+                'name'               => $_POST['name'] ?? '',
+                'price_monthly'      => $_POST['price_monthly'] ?? 0,
+                'max_users'          => $_POST['max_users'] ?? '',
+                'max_customers'      => $_POST['max_customers'] ?? '',
+                'max_contacts'       => $_POST['max_contacts'] ?? '',
+                'backup_access'      => $_POST['backup_access'] ?? 'unlimited',
+                'management_reports' => $_POST['management_reports'] ?? '',
+                'full_access'        => $_POST['full_access'] ?? '',
+            ]);
+        }
+        header('Location: index.php?page=plans&action=tiers&msg=tier_updated');
+        exit;
     }
 }
 
 // ========== نمایش ==========
 $message = $_GET['msg'] ?? '';
 
-// لیست پلن‌ها
-if ($action === 'list' || !$action) {
-    $plans = Plan::getAll();
-    
-    $active_users_count = 0;
-    if ($is_admin || $is_super) {
-        $pdo = getDB();
-        if ($is_super) {
-            $stmt = $pdo->query("SELECT COUNT(*) FROM users WHERE status = 'active'");
-            $active_users_count = $stmt->fetchColumn();
-        } else {
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE company_name = ? AND status = 'active'");
-            $stmt->execute([$user['company_name']]);
-            $active_users_count = $stmt->fetchColumn();
-        }
-    }
-    
-    include __DIR__ . '/../Views/plans/list.php';
+// صفحه‌ی مدیریت تعرفه‌ها — فقط سوپر ادمین
+if ($action === 'tiers') {
+    if (!$is_super) { header('Location: index.php?page=plans'); exit; }
+    $tiers = PlanTier::getAll();
+    include __DIR__ . '/../Views/plans/tiers_edit.php';
 }
-// صفحه خرید
-elseif ($action === 'buy') {
-    include __DIR__ . '/../Views/plans/buy.php';
-}
-// پیش‌فرض
+// صفحه‌ی اصلی: وضعیت فعلی + سه کارت تعرفه + نوار مصرف
 else {
-    header('Location: index.php?page=plans');
-    exit;
+    $tiers = PlanTier::getAll();
+    $current_tier = crm_get_user_plan_tier($user);
+    $usage = [
+        'users'     => crm_check_plan_limit('users', $user),
+        'customers' => crm_check_plan_limit('customers', $user),
+        'contacts'  => crm_check_plan_limit('contacts', $user),
+    ];
+    include __DIR__ . '/../Views/plans/list.php';
 }
 
 ob_end_flush();

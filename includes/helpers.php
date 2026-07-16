@@ -421,3 +421,5 @@ function crm_rate_limit_remaining($key, $window = 300) {
     if (empty($_SESSION[$k])) return $window;
     return max(0, $window - (time() - $_SESSION[$k]['start']));
 }
+
+require_once __DIR__ . '/plan_limits.php';
